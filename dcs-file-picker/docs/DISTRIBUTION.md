@@ -20,6 +20,13 @@ do not overwrite an existing release directory; publish a new identifier, test
 the consuming application, and then update that application's configured URL.
 Keeping the old directory makes rollback a one-line configuration change.
 
+The example uses a `releases/<release-id>/` layer, but that directory name is
+not part of the broker API. Halo's tenant-generic default currently resolves
+`[tools base]/dcs-file-broker/v1.0.0/src/file-broker.js`. Either publish to that
+shape or set Halo's `brokerModuleUrl` explicitly to the chosen immutable
+`releases/<release-id>/` path. Do not let an undocumented directory convention
+be the only thing connecting a consumer to its release.
+
 The exact SharePoint library and release identifier are deployment choices,
 not broker defaults. This repository intentionally contains no tenant URL,
 credentials, deployment script, or generated bundle.

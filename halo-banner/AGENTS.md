@@ -6,23 +6,24 @@ rules and traps that are not obvious from the source.
 This folder is one of several unrelated projects in the repo. Stay inside it and do not
 create dependencies on sibling folders.
 
-No build, no bundler, no package manager, no test runner. Do not add any. The tool has to
-survive being pasted whole into a SharePoint custom script web part, so it must stay a
-single self-contained HTML file plus one script.
+No build, no bundler, no package manager, no Halo test runner. Do not add any. The core
+tool has to survive being pasted whole into a SharePoint custom script web part, so it
+must stay one self-contained HTML payload plus its own runtime script. The reviewed File
+Broker module tree and pinned compressor are optional static runtime dependencies; their
+absence must leave the core tool usable.
 
 ## Layout of the code
 
 `halo-banner-maker.js` is one closure, `initGenerator(root)`, started by a `waitForElement`
-poll. Inside it:
+poll. Its major areas, in source order, are:
 
-| Lines | What |
+| Area | What |
 |---|---|
-| 35–86 | `BRAND`, `HOVER_COLORS`, `DEFAULTS` — the knobs, meant to be edited |
-| 132–150 | `SCOPE_ID` / `SCOPE_CLASS` and `scopedComponentCss()` |
-| 151–204 | `render()` — pushes state into CSS custom properties on the preview |
-| 205–242 | `emit()` — builds the HTML snippet output |
-| 243–409 | The standalone SVG exporter |
-| 410–522 | Control binding |
+| Configuration and state | `BRAND`, `HOVER_COLORS`, `DEFAULTS`, image limits, runtime dependency configuration, and the two per-URL inspection records |
+| Image workflow | broker loading, JPEG/PNG/WebP inspection, alpha detection, optimization, SharePoint save, direct-URL validation, and output guards |
+| Banner component | `SCOPE_ID` / `SCOPE_CLASS`, `scopedComponentCss()`, `render()`, and `emit()` |
+| Standalone SVG | image fetch/Blob reuse, text measurement, geometry duplication, and download |
+| Bindings | sliders, selects, text inputs, pick buttons, Copy, Show code, SVG, and resize rail |
 
 `render()` is the single path from state to screen; every control calls it and it calls
 `emit()` at the end. Add new controls by binding them to `state` and letting `render()` do

@@ -68,7 +68,7 @@ const saved = await broker.save({
 ```
 
 Try it without a tenant: serve the repo and open
-[`demo/index.html`](demo/index.html) — eight working examples against an
+[`demo/index.html`](demo/index.html) — ten working examples against an
 in-memory library. Run the headless tests with:
 
 ```bash
@@ -92,6 +92,71 @@ node --test test/broker.test.mjs
 | Remembering | last location, last site, and recent sites, in one swappable seam |
 | Look | the DCS Workbench design system by default; `theme: 'basic'` for elsewhere |
 | No UI at all | `broker.list/read/write/getMetadata/setMetadata` drive providers headlessly |
+
+---
+
+## Methodology and ownership
+
+The broker separates application intent from storage mechanics.
+
+- The **broker core** validates requests, provider capabilities, path boundaries, byte
+  ceilings, metadata sequencing, and result shapes.
+- A **provider** owns storage-specific discovery, paths, reads, writes, overwrite behavior,
+  and metadata translation. SharePoint knowledge stays in `src/providers/sharepoint.js`.
+- The **dialog** consumes only the provider-neutral contract. Applications may replace it
+  or use the headless methods without duplicating REST, digest, filtering, or validation.
+- The **site catalog** is optional operational configuration. Failure to fetch or normalize
+  favorites becomes an empty catalog rather than a broken application.
+- A **consumer** owns its own policy. Halo, for example, decides which image formats and
+  sizes are acceptable; the broker only transfers the bytes and returns location data.
+
+This boundary is deliberate because the broker is intended to be distributed to multiple
+DCS Workbench applications. Changes should be generic, backward-conscious, and testable
+without depending on a particular consumer.
+
+## Work completed for the Halo integration
+
+- Exported the dependency-free local and SharePoint providers and site-catalog loader from
+  the public entry point so consumers need one import surface.
+- Added stable DCS/DCSPad context adapters, same-origin parent/top probing, classic page
+  context, and the modern Site Pages `spModuleLoader` fallback.
+- Hardened direct browsing URL construction by encoding each path segment and returning
+  normal file URLs instead of SharePoint sharing links.
+- Made SharePoint Blob reads derive their actual byte size when `Content-Length` is absent.
+- Added generic `file.webUrl` and `file.providerData` result location metadata so a consumer
+  can reopen a save dialog in the selected source site/folder.
+- Added optional favorite-site JSON loading with graceful empty-catalog fallback and a
+  canonical example configuration.
+- Added immutable distribution guidance for the complete ES-module tree and a separately
+  managed catalog.
+- Expanded the headless suite to 41 passing contract and regression tests.
+
+## Deliberately not done
+
+- The broker does not contain Halo's image signature, size, transparency, compression, or
+  prompt policy. Those rules remain in the consumer.
+- No tenant URL, credentials, production favorite-sites file, deployment script, generated
+  bundle, mutable `latest` release, or public runtime CDN is included.
+- The existing DCSPad implementation was not migrated or removed.
+- No server-side transfer or processing service was introduced.
+
+## Outstanding work and risks
+
+- **Authenticated SharePoint validation remains mandatory before release.** Exercise modern
+  page context, current and favorite sites, permissions-trimmed libraries, upload/replace,
+  metadata, direct URLs, CSP/MIME delivery, and special filenames through real REST calls.
+- **Canonicalize or reject dot segments in paths.** `normalizePath()` collapses slashes but
+  does not resolve `.` or `..` before `isWithin()` performs a prefix boundary check. Provider
+  output is expected to be canonical, but this shared safety seam should be hardened and
+  covered by regression tests.
+- The dialog has no automated DOM test suite. Its demo flows and accessibility behavior are
+  still checked manually.
+- Large listings are appended row-by-row. A `DocumentFragment` or virtualization should be
+  considered if real libraries make rendering visibly expensive.
+- When both entry size and `Content-Length` are unavailable or wrong, a response may be fully
+  read before the broker can enforce the post-read byte ceiling.
+- Chunked uploads above 50 MB, User/Lookup/Taxonomy editors, an asynchronous recall store,
+  and additional providers remain extension work rather than v1 features.
 
 ---
 

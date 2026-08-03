@@ -302,4 +302,4 @@ field type's round trip, which is exactly the kind of thing that rots silently.
 The dialog itself is verified by hand against `demo/index.html`, which covers
 open/save, filters, multi-select, a starting location, prefilled metadata, a
 custom schema with unavailable columns, and discover mode. If you change dialog
-behaviour, walk those eight buttons.
+behaviour, walk all ten examples.
