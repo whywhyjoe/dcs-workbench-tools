@@ -21,7 +21,7 @@ mistake with this tool.
 | **SVG** | One `.svg` file, images inlined as base64 | You need a *file* — Image web part, Hero web part, a deck, email, Teams |
 
 **Paste the HTML when the banner lives on a page.** It keeps hover (halo scale-up, text
-background colour swap) and the `<a>` wrapper with target/rel, it weighs about 4 KB
+background colour swap) and the `<a>` wrapper with target/rel, it weighs about 4 Kb
 because photos stay as URLs, and every setting stays visible and editable as a custom
 property in the `style` attribute. The SVG has none of that.
 
@@ -46,11 +46,11 @@ The same restriction applies to fonts: a linked `@font-face` would be blocked to
 ### Image size guard
 
 The header reports the latest inspected sizes as compact text such as
-`FG 100 KB / BG 1.4 MB`. An em dash means that URL has not been inspected yet.
+`FG 100 Kb / BG 1.4 Mb`. An em dash means that URL has not been inspected yet.
 One warning icon appears when either image exceeds the policy.
 
 An image qualifies for optional optimization when either dimension exceeds 2000px or
-the file is larger than 400 KiB. Halo checks:
+the file is larger than 400 Kb. Halo checks:
 
 - immediately after a user selects a local or SharePoint file; and
 - before Copy, Show code, or SVG download.
@@ -62,18 +62,18 @@ Editing the URL invalidates that record.
 Optimization is entirely in-browser. It first fits the image inside a 2000×2000 box,
 then performs one compression policy:
 
-- JPEG is re-encoded toward the 400 KiB target.
+- JPEG is re-encoded toward the 400 Kb target.
 - An opaque PNG may be converted to WebP to reach the target efficiently.
 - A PNG with actual transparent pixels stays PNG and receives one fidelity-preserving
-  resize/re-encode; it may remain over 400 KiB rather than repeatedly destroying detail.
+  resize/re-encode; it may remain over 400 Kb rather than repeatedly destroying detail.
 - WebP is resized/re-encoded while preserving decoded transparency.
 
 If the optimized result is optional and larger than the original, Halo keeps the
 original. The pinned compressor is preferred; native Canvas is the fallback.
 
 The standalone SVG still costs the final raster bytes plus about 33% for base64, plus
-roughly 2 KB of vector. A 400 KiB photo will therefore produce an SVG larger than
-400 KiB; the threshold controls referenced source images, not the final SVG container.
+roughly 2 Kb of vector. A 400 Kb photo will therefore produce an SVG larger than
+400 Kb; the threshold controls referenced source images, not the final SVG container.
 
 Watch resolution in the other direction too: the halo photo is clipped to a circle roughly
 **1154 units across — wider than the 1024-unit artboard**, because the halo deliberately
@@ -192,7 +192,7 @@ and its MIT terms are retained in `vendor/LICENSE.browser-image-compression.txt`
 There is no npm/build step, public runtime CDN, upload service, or server-side processing.
 Opaque PNGs may become WebP; PNGs with actual transparent pixels remain PNG and receive a
 single transparency-preserving resize/re-encode, so a best-effort result may remain above
-400 KiB. If the compressor cannot load, Canvas provides an in-browser fallback.
+400 Kb. If the compressor cannot load, Canvas provides an in-browser fallback.
 
 ## Work completed in the image-picker feature
 
@@ -218,7 +218,7 @@ single transparency-preserving resize/re-encode, so a best-effort result may rem
 - No SharePoint deployment or tenant-specific site/catalog configuration is stored here.
 - No server-side image service, npm dependency graph, build step, public runtime CDN, or
   SVG input support was added.
-- Optimization does not guarantee a transparent PNG will fall below 400 KiB; fidelity
+- Optimization does not guarantee a transparent PNG will fall below 400 Kb; fidelity
   and transparency take priority after the one approved pass.
 - The tool does not modify or delete a source file itself. Replacement happens only when
   the user chooses the same destination/name and confirms the broker's overwrite flow.

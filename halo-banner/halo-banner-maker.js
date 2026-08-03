@@ -189,14 +189,18 @@ function normalizeImageUrl(value) {
 }
 function formatBytes(bytes) {
  if (!Number.isFinite(bytes)) return 'unknown size';
- if (bytes < 1024) return `${bytes} B`;
- return `${Math.round(bytes / 1024)} KiB`;
+ const units = [
+  { label: 'Gb', size: 1024 * 1024 * 1024 },
+  { label: 'Mb', size: 1024 * 1024 },
+  { label: 'Kb', size: 1024 },
+ ];
+ const unit = units.find(({ size }) => bytes >= size) || units[units.length - 1];
+ const value = Math.max(1, bytes / unit.size);
+ return `${value < 10 && unit.label !== 'Kb' ? value.toFixed(1) : Math.round(value)} ${unit.label}`;
 }
 function formatHeaderBytes(bytes) {
  if (!Number.isFinite(bytes)) return '\u2014';
- if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
- const megabytes = bytes / (1024 * 1024);
- return `${megabytes < 10 ? megabytes.toFixed(1) : Math.round(megabytes)} MB`;
+ return formatBytes(bytes);
 }
 function inspectionSummary(inspection) {
  if (!inspection) return 'not inspected';
@@ -687,7 +691,9 @@ async function optimizationDecision(field, blob, inspection, name) {
  if (inspection.width > IMAGE_LIMIT_EDGE || inspection.height > IMAGE_LIMIT_EDGE) {
   reasons.push(`longest edge ${Math.max(inspection.width, inspection.height)} px (limit ${IMAGE_LIMIT_EDGE} px)`);
  }
- if (inspection.size > IMAGE_LIMIT_BYTES) reasons.push(`${formatBytes(inspection.size)} (limit 400 KiB)`);
+ if (inspection.size > IMAGE_LIMIT_BYTES) {
+  reasons.push(`${formatBytes(inspection.size)} (limit ${formatBytes(IMAGE_LIMIT_BYTES)})`);
+ }
  const choice = await showDecision({
   title: `Review ${field.label} image`,
   message: 'This image is larger than the recommended Halo limits.',

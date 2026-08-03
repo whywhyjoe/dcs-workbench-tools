@@ -80,6 +80,10 @@
 /* Link row: the URL earns twice the width of the checkbox beside it. */
 .halo-row-2-1 { grid-template-columns: 2fr 1fr; }
 
+/* Banner image row: keep opacity compact and let the URL consume the space
+   that the content-width Multiply control does not need. */
+.halo-row-banner-image { grid-template-columns: minmax(0, 1fr) 80px max-content; }
+
 /* The kit reserves a 26px right gutter on every select, of which only the last
    10px is the arrow glyph. Halo runs three and four controls across one 400px
    column and cannot spend 16px of that on dead space: at 26px the colour
