@@ -79,6 +79,11 @@ const BADGE_BUCKET = {
   doc: 'doc', docx: 'doc', ppt: 'doc', pptx: 'doc', one: 'doc',
 };
 
+// Build large folder listings over several frames. SharePoint may return
+// thousands of entries; keeping each batch modest leaves navigation and
+// cancellation responsive while preserving every row.
+const LISTING_RENDER_BATCH_SIZE = 200;
+
 const el = (tag, className, text) => {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -239,6 +244,7 @@ function runDialog({
   let metadataForm = null;
   let metadataState = null;
   let metadataToken = 0;
+  let listingRenderToken = 0;
   let busy = false;
   let uploaded = null;              // set once bytes have landed, for retry
   let secondaryAction = null;
@@ -281,6 +287,7 @@ function runDialog({
   function finish(result) {
     if (settled) return;
     settled = true;
+    listingRenderToken += 1;
     try { if (dialog.open) dialog.close(); } catch { /* already closed */ }
     dialog.remove();
     resolve(result);
@@ -289,6 +296,7 @@ function runDialog({
   function fail(error) {
     if (settled) return;
     settled = true;
+    listingRenderToken += 1;
     try { if (dialog.open) dialog.close(); } catch { /* already closed */ }
     dialog.remove();
     reject(error);
@@ -337,6 +345,10 @@ function runDialog({
   }
 
   async function selectProvider(candidate, startLocation = null) {
+    // Invalidate scheduled batches before any asynchronous locator/site work;
+    // rows from the previous provider must never append into the new mode.
+    listingRenderToken += 1;
+    listBox.textContent = '';
     provider = candidate;
     recall?.rememberProvider(candidate.id);
     selected = null;
@@ -465,6 +477,7 @@ function runDialog({
     if (busy) return false;
     location = { ...target };
     selected = null;
+    listingRenderToken += 1;
     setError('');
     listBox.textContent = '';
     const loading = el('p', 'dfb-empty dfb-empty-loading', 'Loading…');
@@ -595,6 +608,7 @@ function runDialog({
   }
 
   function renderListing() {
+    const renderToken = ++listingRenderToken;
     listBox.textContent = '';
     const entries = listing.entries;
     if (!entries.length) {
@@ -604,18 +618,30 @@ function runDialog({
       listBox.append(el('p', 'dfb-empty', message));
       return;
     }
-    for (const entry of entries) listBox.append(entryRow(entry));
-    if (listing.hiddenCount) {
-      listBox.append(el('p', 'dfb-empty',
-        `${listing.hiddenCount} file${listing.hiddenCount === 1 ? '' : 's'} hidden by the ${accept.describe()} filter.`));
-    }
-    if (listing.partial) {
-      listBox.append(el('p', 'dfb-empty', 'This folder has more items than were loaded.'));
-    }
+    let index = 0;
+    const appendBatch = () => {
+      if (settled || renderToken !== listingRenderToken) return;
+      const fragment = document.createDocumentFragment();
+      const end = Math.min(index + LISTING_RENDER_BATCH_SIZE, entries.length);
+      while (index < end) fragment.append(entryRow(entries[index++]));
+      if (index === entries.length) {
+        if (listing.hiddenCount) {
+          fragment.append(el('p', 'dfb-empty',
+            `${listing.hiddenCount} file${listing.hiddenCount === 1 ? '' : 's'} hidden by the ${accept.describe()} filter.`));
+        }
+        if (listing.partial) {
+          fragment.append(el('p', 'dfb-empty', 'This folder has more items than were loaded.'));
+        }
+      }
+      listBox.append(fragment);
+      if (index < entries.length) requestAnimationFrame(appendBatch);
+    };
+    appendBatch();
   }
 
   // ---- device (non-browsable) provider -----------------------------------
   function renderDeviceZone() {
+    listingRenderToken += 1;
     listBox.textContent = '';
     if (isSave) {
       listBox.append(el('p', 'dfb-empty',
@@ -759,6 +785,8 @@ function runDialog({
           name: entry.name,
           path: entry.path,
           url: entry.url || '',
+          providerData: entry.providerData ? { ...entry.providerData } : null,
+          webUrl: entry.providerData?.webUrl || location?.webUrl || '',
           size: read.size ?? entry.size ?? 0,
           modified: entry.modified || '',
           mimeType: read.mimeType || entry.mimeType || '',

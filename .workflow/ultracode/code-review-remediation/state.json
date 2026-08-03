@@ -1,0 +1,37 @@
+{
+  "title": "Code-review reliability and performance remediation",
+  "slug": "code-review-remediation",
+  "created_at": "2026-08-03T01:52:19-04:00",
+  "updated_at": "2026-08-03T09:08:28-04:00",
+  "status": "complete",
+  "mode": "delegated",
+  "baseline_ref": "55a16e7a7798ff97987c6f5a2501520fe04fcaee",
+  "risk_level": "high",
+  "eval_contract": { "level": "full", "path": "eval-contract.md", "status": "checked" },
+  "approval": { "required": false, "granted": null, "notes": "Review-file deletion explicitly authorized; commit/push/deploy excluded." },
+  "delegation": {
+    "native_agent_available": true,
+    "native_agent_planned": true,
+    "native_agent_used": true,
+    "agent_count": 3,
+    "wave_count": 2,
+    "no_delegation_reason": "",
+    "notes": "Two disjoint implementation packets followed by one independent review."
+  },
+  "packets": [
+    { "id": "01-halo-runtime", "status": "complete", "owner": "write-capable-agent", "write_scope": ["halo-banner/halo-banner-maker.js"], "result_path": "results/01-halo-runtime.md" },
+    { "id": "02-broker-runtime", "status": "complete", "owner": "write-capable-agent", "write_scope": ["dcs-file-picker/src/file-broker.js", "dcs-file-picker/src/providers/sharepoint.js", "dcs-file-picker/src/dialog.js", "dcs-file-picker/test/broker.test.mjs"], "result_path": "results/02-broker-runtime.md" },
+    { "id": "03-documentation", "status": "complete", "owner": "parent", "write_scope": ["code-review-process.md", "readme.md", "halo-banner/README.md", "halo-banner/AGENTS.md", "dcs-file-picker/README.md", "dcs-file-picker/CLAUDE.md", "dcs-file-picker/docs/EXTENDING.md", "dcs-file-picker/src/provider.js"], "result_path": "results/03-documentation.md" },
+    { "id": "04-independent-review", "status": "complete", "owner": "read-only-agent", "write_scope": [], "result_path": "results/04-independent-review.md" }
+  ],
+  "verification": {
+    "status": "complete",
+    "checks": [
+      { "name": "broker tests", "command": "node --test dcs-file-picker/test/broker.test.mjs", "required": true, "status": "passed", "evidence": "45/45 passed" },
+      { "name": "Halo syntax", "command": "node --check halo-banner/halo-banner-maker.js", "required": true, "status": "passed", "evidence": "passed" },
+      { "name": "Halo browser regression", "command": "local interactive duplicate-init/output checks", "required": true, "status": "passed", "evidence": "duplicate runtime single -10px handler; Show 61; Copy 62; mobile no overflow; console clean" },
+      { "name": "generated CSS and diff", "command": "python halo-banner/inline-css.py; git diff --check", "required": true, "status": "passed", "evidence": "inline completed without HTML diff; diff check passed" },
+      { "name": "live SharePoint smoke", "command": "authenticated tenant checklist", "required": false, "status": "skipped", "evidence": "no authenticated tenant session available" }
+    ]
+  }
+}

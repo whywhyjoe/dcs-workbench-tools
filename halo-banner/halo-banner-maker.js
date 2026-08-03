@@ -1,3 +1,6 @@
+(() => {
+'use strict';
+
 /**
  * Utility: waitForElement
  * Waits for a standard (non-jQuery) selector to match one or more elements in the DOM.
@@ -27,7 +30,16 @@ function waitForElement(selector, callback, timeout = 10000, interval = 100) {
 	check();
 }
 
+/* Capture this while the classic script is executing; document.currentScript is
+   null by the time the polling callback runs. SharePoint deployments derive
+   their shared tools base from page context unless explicitly set. */
+const HALO_SCRIPT_URL = document.currentScript?.src || document.baseURI;
+const INIT_STATE_ATTRIBUTE = 'data-halo-runtime-state';
+
 function initGenerator(root) {
+if (!root || root.hasAttribute(INIT_STATE_ATTRIBUTE)) return;
+root.setAttribute(INIT_STATE_ATTRIBUTE, 'initializing');
+try {
 /* ############################################################
   DEFAULTS — edit these, reload, experiment. Everything the
   panel controls starts from here.
@@ -94,6 +106,748 @@ const placeholderImage = 'data:image/svg+xml;utf8,' + encodeURIComponent(
 <path d="M110 600c0-105 85-190 190-190s190 85 190 190z" fill="#9aa4b0"/>
 </svg>`);
 const state = { ...DEFAULTS };
+const IMAGE_LIMIT_BYTES = 400 * 1024;
+const IMAGE_LIMIT_EDGE = 2000;
+const IMAGE_ACCEPT = ['.jpg', '.jpeg', '.png', '.webp'];
+const imageFields = {
+ photoImage: { input: 'purl', pick: 'pick-purl', shortLabel: 'FG', label: 'foreground' },
+ bgImage: { input: 'bgurl', pick: 'pick-bgurl', shortLabel: 'BG', label: 'background' },
+};
+const imageRecords = new Map();
+const pendingActions = new Map();
+let outputTail = Promise.resolve();
+let brokerPromise = null;
+let compressorPromise = null;
+let brokerFailure = '';
+
+function configuredUrl(value, fallback, base = HALO_SCRIPT_URL) {
+ try { return new URL(String(value || fallback), base).href; }
+ catch { return String(value || fallback); }
+}
+function sharePointWebUrl() {
+ const modernSitePages = (() => {
+  try {
+   return globalThis.spModuleLoader?._bundledComponents
+    ?.["b6917cb1-93a0-4b97-a84d-7cf49975d4ec"]
+    ?.PageManager?._instance?.pageContext?.legacyPageContext;
+  } catch { return null; }
+ })();
+ const candidates = [
+  globalThis.__DCS_SP_CONTEXT__?.webAbsoluteUrl,
+  globalThis.__DCS_SP_CONTEXT__?.webUrl,
+  globalThis.__DCSPAD_SP_CONTEXT__?.webAbsoluteUrl,
+  globalThis.__DCSPAD_SP_CONTEXT__?.webUrl,
+  globalThis._spPageContextInfo?.webAbsoluteUrl,
+  globalThis.moduleLoaderPageContext?.web?.absoluteUrl,
+  modernSitePages?.webAbsoluteUrl,
+ ];
+ const configured = candidates.find(value => /^https?:\/\//i.test(String(value || '')));
+ if (configured) return String(configured).replace(/\/$/, '');
+ try {
+  const match = location.pathname.match(/^.*?\/(?:sites|teams)\/[^/]+/i);
+  if (match) return `${location.origin}${match[0]}`.replace(/\/$/, '');
+ } catch { /* standalone fragments may not expose a usable location */ }
+ return '';
+}
+function imageConfig() {
+ const configured = globalThis.HALO_IMAGE_PICKER_CONFIG || {};
+ const webUrl = sharePointWebUrl();
+ const brokerVersion = String(configured.brokerVersion || 'v1.0.0').replace(/^\/+|\/+$/g, '');
+ const toolsBaseUrl = configured.toolsBaseUrl
+  ? `${configuredUrl(configured.toolsBaseUrl, configured.toolsBaseUrl).replace(/\/$/, '')}/`
+  : (webUrl ? `${webUrl}/SiteAssets/Code/tools/` : '');
+ const brokerDefault = toolsBaseUrl
+  ? configuredUrl(`dcs-file-broker/${brokerVersion}/src/file-broker.js`, '', toolsBaseUrl)
+  : configuredUrl('', '../dcs-file-picker/src/file-broker.js');
+ const catalogDefault = toolsBaseUrl
+  ? configuredUrl('dcs-file-broker/sites.json', '', toolsBaseUrl)
+  : '';
+ const compressorDefault = toolsBaseUrl
+  ? configuredUrl('halo-banner/vendor/browser-image-compression-2.0.2.js', '', toolsBaseUrl)
+  : configuredUrl('', 'vendor/browser-image-compression-2.0.2.js');
+ return {
+  ...configured,
+  toolsBaseUrl,
+  brokerVersion,
+  brokerModuleUrl: configuredUrl(configured.brokerModuleUrl, brokerDefault),
+  siteCatalogUrl: configured.siteCatalogUrl === false
+   ? ''
+   : (configured.siteCatalogUrl ? configuredUrl(configured.siteCatalogUrl, catalogDefault) : catalogDefault),
+  compressionScriptUrl: configuredUrl(
+   configured.compressionScriptUrl,
+   compressorDefault
+  ),
+  defaultProvider: configured.defaultProvider || 'sharepoint',
+ };
+}
+function normalizeImageUrl(value) {
+ const text = String(value || '').trim();
+ if (!text) return '';
+ if (/^(?:data|blob):/i.test(text)) return text;
+ try { return new URL(text, document.baseURI).href; }
+ catch { return text; }
+}
+function formatBytes(bytes) {
+ if (!Number.isFinite(bytes)) return 'unknown size';
+ const units = [
+  { label: 'Gb', size: 1024 * 1024 * 1024 },
+  { label: 'Mb', size: 1024 * 1024 },
+  { label: 'Kb', size: 1024 },
+ ];
+ const unit = units.find(({ size }) => bytes >= size) || units[units.length - 1];
+ const value = Math.max(1, bytes / unit.size);
+ return `${value < 10 && unit.label !== 'Kb' ? value.toFixed(1) : Math.round(value)} ${unit.label}`;
+}
+function formatHeaderBytes(bytes) {
+ if (!Number.isFinite(bytes)) return '\u2014';
+ return formatBytes(bytes);
+}
+function inspectionSummary(inspection) {
+ if (!inspection) return 'not inspected';
+ const alpha = inspection.hasAlpha ? ' \u00b7 transparency' : '';
+ return `${inspection.width}\u00d7${inspection.height} \u00b7 ${formatBytes(inspection.size)}${alpha}`;
+}
+function needsOptimization(inspection) {
+ return Boolean(inspection && (
+  inspection.width > IMAGE_LIMIT_EDGE || inspection.height > IMAGE_LIMIT_EDGE
+  || inspection.size > IMAGE_LIMIT_BYTES
+ ));
+}
+function updateImageStatus() {
+ const status = $('image-sizes');
+ const warning = $('image-size-warning');
+ if (!status || !warning) return;
+ const summaries = Object.entries(imageFields).map(([key, field]) => {
+  const record = imageRecords.get(key);
+  const current = normalizeImageUrl(state[key]);
+  const value = record && record.urlKey === current && record.inspection
+   ? formatHeaderBytes(record.inspection.size)
+   : '\u2014';
+  return `${field.shortLabel} ${value}`;
+ });
+ const oversized = Object.entries(imageFields).filter(([key]) => {
+  const record = imageRecords.get(key);
+  return record && record.urlKey === normalizeImageUrl(state[key])
+   && needsOptimization(record.inspection);
+ });
+ status.textContent = summaries.join(' / ');
+ warning.hidden = oversized.length === 0;
+ const warningText = oversized.length
+  ? `${oversized.map(([, field]) => field.label).join(' and ')} image may need optimization.`
+  : '';
+ warning.title = warningText;
+ warning.setAttribute('aria-label', warningText || 'Image size warning');
+}
+function setNotice(message = '', kind = 'info') {
+ const notice = $('halo-notice');
+ if (!notice) return;
+ const body = notice.querySelector('.dcs-notice-body') || notice;
+ body.textContent = message;
+ notice.dataset.kind = kind;
+ notice.hidden = !message;
+}
+function setRootBusy(busy) {
+ root.dataset.busy = String(Boolean(busy));
+ ['pick-purl', 'pick-bgurl', 'copy', 'svg', 'toggle-code'].forEach(id => {
+  const button = $(id);
+  if (!button) return;
+  button.disabled = Boolean(busy) || (id.startsWith('pick-') && Boolean(brokerFailure));
+  if (id.startsWith('pick-')) {
+   button.dataset.readyTitle ||= button.title;
+   button.title = brokerFailure || button.dataset.readyTitle;
+  }
+ });
+ ['purl', 'bgurl'].forEach(id => {
+  const input = $(id);
+  if (input) input.disabled = Boolean(busy);
+ });
+}
+function buttonLabel(button, text) {
+ const label = button?.querySelector('span');
+ if (label) label.textContent = text;
+}
+function errorMessage(error, fallback = 'The image operation could not be completed.') {
+ if (error?.code === 'cancelled' || error?.name === 'AbortError') return '';
+ return error?.message || String(error || fallback);
+}
+
+function showDecision({ title, message, details = '', primary = 'Continue', secondary = '', cancel = 'Cancel' }) {
+ const dialog = $('halo-decision');
+ if (!dialog?.showModal) {
+  return Promise.resolve(globalThis.confirm?.(`${message}\n\n${details}`) ? 'primary' : 'cancel');
+ }
+ const titleEl = $('halo-decision-title'), messageEl = $('halo-decision-message');
+ const detailsEl = $('halo-decision-details'), primaryButton = $('halo-decision-primary');
+ const secondaryButton = $('halo-decision-secondary'), cancelButton = $('halo-decision-cancel');
+ titleEl.textContent = title;
+ messageEl.textContent = message;
+ detailsEl.textContent = details;
+ detailsEl.hidden = !details;
+ primaryButton.textContent = primary;
+ secondaryButton.textContent = secondary;
+ secondaryButton.hidden = !secondary;
+ cancelButton.textContent = cancel;
+ return new Promise(resolve => {
+  let result = 'cancel';
+  const choose = value => { result = value; dialog.close(); };
+  const onPrimary = () => choose('primary');
+  const onSecondary = () => choose('secondary');
+  const onCancel = () => choose('cancel');
+  const onClose = () => {
+   primaryButton.removeEventListener('click', onPrimary);
+   secondaryButton.removeEventListener('click', onSecondary);
+   cancelButton.removeEventListener('click', onCancel);
+   dialog.removeEventListener('cancel', onCancelEvent);
+   resolve(result);
+  };
+  const onCancelEvent = event => { event.preventDefault(); choose('cancel'); };
+  primaryButton.addEventListener('click', onPrimary);
+  secondaryButton.addEventListener('click', onSecondary);
+  cancelButton.addEventListener('click', onCancel);
+  dialog.addEventListener('cancel', onCancelEvent);
+  dialog.addEventListener('close', onClose, { once: true });
+  dialog.showModal();
+ });
+}
+
+function showProgress(label) {
+ const dialog = $('halo-progress');
+ const labelEl = $('halo-progress-label');
+ const bar = $('halo-progress-bar');
+ const cancel = $('halo-progress-cancel');
+ const controller = new AbortController();
+ if (labelEl) labelEl.textContent = label;
+ if (bar) bar.removeAttribute('value');
+ if (cancel) {
+  cancel.disabled = false;
+  cancel.onclick = () => controller.abort();
+ }
+ if (dialog?.showModal && !dialog.open) dialog.showModal();
+ return {
+  signal: controller.signal,
+  progress(value) {
+   if (!bar) return;
+   if (Number.isFinite(value)) bar.value = Math.max(0, Math.min(1, value));
+   else bar.removeAttribute('value');
+  },
+  close() {
+   if (cancel) cancel.onclick = null;
+   if (dialog?.open) dialog.close();
+  },
+ };
+}
+
+async function loadBroker() {
+ if (brokerFailure) throw new Error(brokerFailure);
+ if (brokerPromise) return brokerPromise;
+ brokerPromise = (async () => {
+  const config = imageConfig();
+  const module = await import(config.brokerModuleUrl);
+  const required = ['createFileBroker', 'localProvider', 'sharePointProvider', 'loadSiteCatalog'];
+  const missing = required.filter(name => typeof module[name] !== 'function');
+  if (missing.length) throw new Error(`File Broker is missing: ${missing.join(', ')}.`);
+  const sharePointOptions = { ...(config.sharePoint || {}) };
+  if (config.siteCatalogUrl) sharePointOptions.sites = module.loadSiteCatalog(config.siteCatalogUrl);
+  const broker = module.createFileBroker({
+   providers: [module.localProvider(), module.sharePointProvider(sharePointOptions)],
+   defaultProvider: config.defaultProvider,
+   accept: IMAGE_ACCEPT,
+   metadata: false,
+   storageKey: 'halo-banner.images.v1',
+   mount: document.body,
+  });
+  if (!broker || typeof broker.open !== 'function' || typeof broker.save !== 'function') {
+   throw new Error('File Broker did not return the expected open/save API.');
+  }
+  return broker;
+ })().catch(error => {
+  brokerPromise = null;
+  brokerFailure = `Image picker is unavailable. Manual URLs still work. ${error?.message || error}`;
+  setRootBusy(false);
+  throw new Error(brokerFailure);
+ });
+ return brokerPromise;
+}
+
+function loadCompressor() {
+ if (typeof globalThis.imageCompression === 'function') return Promise.resolve(globalThis.imageCompression);
+ if (compressorPromise) return compressorPromise;
+ const src = imageConfig().compressionScriptUrl;
+ compressorPromise = new Promise((resolve, reject) => {
+  const existing = [...document.querySelectorAll('script[data-halo-compressor]')]
+   .find(candidate => candidate.dataset.haloCompressor === src);
+  const script = existing || document.createElement('script');
+  const done = () => typeof globalThis.imageCompression === 'function'
+   ? resolve(globalThis.imageCompression)
+   : reject(new Error('The image compressor loaded without its browser API.'));
+  script.addEventListener('load', done, { once: true });
+  script.addEventListener('error', () => reject(new Error('The pinned image compressor could not be loaded.')), { once: true });
+  if (!existing) {
+   script.src = src;
+   script.dataset.haloCompressor = src;
+   document.head.append(script);
+  }
+ }).catch(error => {
+  document.querySelectorAll('script[data-halo-compressor]').forEach(script => {
+   if (script.dataset.haloCompressor === src) script.remove();
+  });
+  compressorPromise = null;
+  throw error;
+ });
+ return compressorPromise;
+}
+
+function imageFormat(bytes) {
+ const ascii = (start, length) => String.fromCharCode(...bytes.slice(start, start + length));
+ if (bytes.length >= 4 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+  return { format: 'jpeg', mimeType: 'image/jpeg', extension: 'jpg', hasAlpha: false };
+ }
+ const pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+ if (bytes.length >= 33 && pngSignature.every((value, index) => bytes[index] === value)) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (ascii(12, 4) !== 'IHDR' || view.getUint32(8) !== 13) return null;
+  const colorType = bytes[25];
+  let offset = 8;
+  let transparentChunk = false;
+  let complete = false;
+  while (offset + 12 <= bytes.length) {
+   const length = view.getUint32(offset);
+   if (offset + 12 + length > bytes.length) return null;
+   const type = ascii(offset + 4, 4);
+   if (type === 'tRNS') transparentChunk = true;
+   offset += 12 + length;
+   if (type === 'IEND') { complete = true; break; }
+  }
+  if (!complete) return null;
+  return {
+   format: 'png', mimeType: 'image/png', extension: 'png',
+   mayHaveAlpha: colorType === 4 || colorType === 6 || transparentChunk,
+   hasAlpha: false,
+  };
+ }
+ if (bytes.length >= 16 && ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP') {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const declaredSize = view.getUint32(4, true) + 8;
+  if (declaredSize > bytes.length) return null;
+  let offset = 12;
+  let mayHaveAlpha = false;
+  while (offset + 8 <= declaredSize) {
+   const type = ascii(offset, 4);
+   const length = view.getUint32(offset + 4, true);
+   const payload = offset + 8;
+   if (payload + length > declaredSize) return null;
+   if (type === 'ALPH') mayHaveAlpha = true;
+   if (type === 'VP8X' && length >= 1 && (bytes[payload] & 0x10)) mayHaveAlpha = true;
+   if (type === 'VP8L' && length >= 5 && bytes[payload] === 0x2f
+       && (bytes[payload + 4] & 0x10)) mayHaveAlpha = true;
+   offset = payload + length + (length % 2);
+  }
+  return {
+   format: 'webp', mimeType: 'image/webp', extension: 'webp',
+   mayHaveAlpha, hasAlpha: false,
+  };
+ }
+ return null;
+}
+
+async function decodeCanvasSource(blob) {
+ if (typeof createImageBitmap === 'function') {
+  const bitmap = await createImageBitmap(blob);
+  return {
+   image: bitmap, width: bitmap.width, height: bitmap.height,
+   close: () => bitmap.close?.(),
+  };
+ }
+ const url = URL.createObjectURL(blob);
+ return new Promise((resolve, reject) => {
+  const decoded = new Image();
+  decoded.onload = () => resolve({
+   image: decoded, width: decoded.naturalWidth, height: decoded.naturalHeight,
+   close: () => URL.revokeObjectURL(url),
+  });
+  decoded.onerror = () => {
+   URL.revokeObjectURL(url);
+   reject(new Error('The browser could not decode this image.'));
+  };
+  decoded.src = url;
+ });
+}
+
+async function inspectPixels(blob, mayHaveAlpha) {
+ const source = await decodeCanvasSource(blob);
+ try {
+  let hasAlpha = false;
+  if (mayHaveAlpha) {
+   // Scan native pixels in bounded tiles. Scaling the whole image down can
+   // average away a small transparent detail and cause a later encode to
+   // flatten it, while one full-size canvas can exhaust browser memory.
+   const tileSize = 512;
+   const canvas = document.createElement('canvas');
+   for (let y = 0; y < source.height && !hasAlpha; y += tileSize) {
+    for (let x = 0; x < source.width && !hasAlpha; x += tileSize) {
+     const width = Math.min(tileSize, source.width - x);
+     const height = Math.min(tileSize, source.height - y);
+     canvas.width = width;
+     canvas.height = height;
+     const context = canvas.getContext('2d', { alpha: true, willReadFrequently: true });
+     if (!context) throw new Error('The browser could not create an image canvas.');
+     context.drawImage(source.image, x, y, width, height, 0, 0, width, height);
+     const pixels = context.getImageData(0, 0, width, height).data;
+     for (let index = 3; index < pixels.length; index += 4) {
+      if (pixels[index] < 255) { hasAlpha = true; break; }
+     }
+    }
+   }
+  }
+  return { width: source.width, height: source.height, hasAlpha };
+ } finally { source.close(); }
+}
+
+async function inspectBlob(blob, name = 'image') {
+ if (!(blob instanceof Blob) || !blob.size) throw new Error(`"${name}" is empty.`);
+ const bytes = new Uint8Array(await blob.arrayBuffer());
+ const format = imageFormat(bytes);
+ if (!format) throw new Error(`"${name}" is not a valid JPEG, PNG, or WebP image. SVG is not supported.`);
+ let pixels;
+ try { pixels = await inspectPixels(blob, format.mayHaveAlpha); }
+ catch { throw new Error(`"${name}" has a recognized header but its pixels cannot be decoded.`); }
+ if (!pixels.width || !pixels.height) throw new Error(`"${name}" has invalid dimensions.`);
+ const inspection = { ...format, ...pixels, size: blob.size };
+ inspection.needsOptimization = needsOptimization(inspection);
+ return inspection;
+}
+
+function canvasBlob(canvas, type, quality) {
+ return new Promise((resolve, reject) => canvas.toBlob(
+  blob => blob ? resolve(blob) : reject(new Error(`This browser cannot encode ${type}.`)),
+  type,
+  quality,
+ ));
+}
+
+async function canvasOptimize(blob, inspection, signal, onProgress, {
+ targetMimeType = inspection.mimeType,
+ preservePngFidelity = false,
+} = {}) {
+ const source = await decodeCanvasSource(blob);
+ try {
+  let scale = Math.min(1, IMAGE_LIMIT_EDGE / Math.max(source.width, source.height));
+  let result = blob;
+  const attempts = preservePngFidelity ? 1 : 8;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+   if (signal.aborted) throw new DOMException('Cancelled', 'AbortError');
+   const width = Math.max(1, Math.round(source.width * scale));
+   const height = Math.max(1, Math.round(source.height * scale));
+   const canvas = document.createElement('canvas');
+   canvas.width = width;
+   canvas.height = height;
+   const preservesAlpha = targetMimeType !== 'image/jpeg' && inspection.hasAlpha;
+   const context = canvas.getContext('2d', { alpha: preservesAlpha });
+   if (!context) throw new Error('The browser could not create an image canvas.');
+   if (!preservesAlpha) {
+    context.fillStyle = '#fff';
+    context.fillRect(0, 0, width, height);
+   }
+   context.drawImage(source.image, 0, 0, width, height);
+   result = await canvasBlob(canvas, targetMimeType,
+    targetMimeType === 'image/png' ? undefined : 0.82);
+   onProgress((attempt + 1) / attempts);
+   if (preservePngFidelity || result.size <= IMAGE_LIMIT_BYTES) break;
+   const targetScale = Math.sqrt(IMAGE_LIMIT_BYTES / result.size) * 0.92;
+   scale *= Math.min(0.88, targetScale);
+  }
+  return result;
+ } finally { source.close(); }
+}
+
+async function optimizeImage(blob, inspection, name) {
+ const progress = showProgress(`Optimizing ${name}`);
+ try {
+  let optimized;
+  const transparentPng = inspection.format === 'png' && inspection.hasAlpha;
+  const targetMimeType = inspection.format === 'png' && !inspection.hasAlpha
+   ? 'image/webp'
+   : inspection.mimeType;
+  if (!transparentPng) {
+   try {
+    const compress = await loadCompressor();
+    if (progress.signal.aborted) throw new DOMException('Cancelled', 'AbortError');
+    const file = blob instanceof File
+     ? blob
+     : new File([blob], name, { type: inspection.mimeType, lastModified: Date.now() });
+    optimized = await compress(file, {
+     maxSizeMB: IMAGE_LIMIT_BYTES / 1024 / 1024,
+     maxWidthOrHeight: IMAGE_LIMIT_EDGE,
+     useWebWorker: false,
+     fileType: targetMimeType,
+     initialQuality: 0.82,
+     maxIteration: 12,
+     signal: progress.signal,
+     onProgress: percent => progress.progress(Number(percent) / 100),
+    });
+   } catch (error) {
+    if (progress.signal.aborted) throw error;
+    console.warn('[halo] pinned image compressor unavailable; using Canvas fallback', error);
+   }
+  }
+  const interimInspection = optimized ? await inspectBlob(optimized, name) : null;
+  if (transparentPng || !optimized || needsOptimization(interimInspection)) {
+   optimized = await canvasOptimize(optimized || blob, await inspectBlob(optimized || blob, name),
+    progress.signal, value => progress.progress(value), {
+     targetMimeType,
+     preservePngFidelity: transparentPng,
+    });
+  }
+  if (progress.signal.aborted) throw new DOMException('Cancelled', 'AbortError');
+  const optimizedInspection = await inspectBlob(optimized, name);
+  if (optimizedInspection.width > IMAGE_LIMIT_EDGE || optimizedInspection.height > IMAGE_LIMIT_EDGE) {
+   throw new Error('The optimized image still exceeds the 2000 px dimension limit.');
+  }
+  const hadRequiredResize = inspection.width > IMAGE_LIMIT_EDGE || inspection.height > IMAGE_LIMIT_EDGE;
+  if (!hadRequiredResize && optimized.size >= blob.size) {
+   return { blob, inspection };
+  }
+  return { blob: optimized, inspection: optimizedInspection };
+ } finally { progress.close(); }
+}
+
+function suggestedName(name, inspection, addOptimizedSuffix) {
+ const cleaned = String(name || 'halo-image').replace(/["*:<>?\\/|]+/g, '-').trim();
+ const originalExtension = cleaned.match(/\.([^.]+)$/)?.[1] || '';
+ const formatMatches = inspection.format === 'jpeg'
+  ? /^jpe?g$/i.test(originalExtension)
+  : originalExtension.toLowerCase() === inspection.extension;
+ const extension = formatMatches ? originalExtension : inspection.extension;
+ const stem = cleaned.replace(/\.[^.]+$/, '').trim()
+  || 'halo-image';
+ return `${stem}${addOptimizedSuffix ? '-optimized' : ''}.${extension}`;
+}
+
+function checkedDirectUrl(value, operation) {
+ const text = String(value || '').trim();
+ let parsed;
+ try { parsed = new URL(text); } catch { parsed = null; }
+ const sharingPath = /\/:\w:\/(?:r|s|g)\//i.test(parsed?.pathname || '')
+  || /\/_layouts\/15\/(?:guestaccess|sharing|Doc)\.aspx/i.test(parsed?.pathname || '');
+ if (!parsed || !/^https?:$/i.test(parsed.protocol) || sharingPath) {
+  brokerFailure = `Image picker is unavailable. Manual URLs still work. File Broker ${operation} did not return a direct SharePoint browsing URL.`;
+  setRootBusy(false);
+  throw new Error(brokerFailure);
+ }
+ return parsed.href;
+}
+
+function parentFolder(path) {
+ const normalized = String(path || '').replace(/\\/g, '/').replace(/\/+$/, '');
+ const split = normalized.lastIndexOf('/');
+ return split > 0 ? normalized.slice(0, split) : '';
+}
+
+function sharePointSaveStart(picked) {
+ const path = parentFolder(picked?.file?.path);
+ if (!path) return null;
+ const start = { provider: 'sharepoint', path };
+ const webUrl = String(
+  picked?.file?.webUrl || picked?.file?.providerData?.webUrl || picked?.webUrl || ''
+ ).trim();
+ if (/^https?:\/\//i.test(webUrl)) start.webUrl = webUrl;
+ return start;
+}
+
+function nameFromUrl(value, fallback) {
+ try {
+  const name = decodeURIComponent(new URL(value, document.baseURI).pathname.split('/').pop() || '');
+  return name || fallback;
+ } catch { return fallback; }
+}
+
+async function saveToSharePoint(broker, blob, inspection, name, {
+ start = null,
+ addOptimizedSuffix = false,
+} = {}) {
+ const saved = await broker.save({
+  providers: ['sharepoint'],
+  data: blob,
+  suggestedName: suggestedName(name, inspection, addOptimizedSuffix),
+  accept: [`.${inspection.extension}`],
+  metadata: false,
+  ...(start ? { start } : {}),
+  title: 'Save image to SharePoint',
+  description: 'Choose the document library that will host this Halo image.',
+ });
+ if (!saved) return null;
+ if (saved.provider !== 'sharepoint' || !saved.file || typeof saved.file !== 'object') {
+  brokerFailure = 'Image picker is unavailable. Manual URLs still work. File Broker returned an invalid save result.';
+  setRootBusy(false);
+  throw new Error(brokerFailure);
+ }
+ const directUrl = checkedDirectUrl(saved.file.url, 'save');
+ return { url: directUrl, name: saved.file?.name || name };
+}
+
+async function optimizationDecision(field, blob, inspection, name) {
+ if (!needsOptimization(inspection)) return { blob, inspection, optimized: false, decision: 'ready' };
+ const reasons = [];
+ if (inspection.width > IMAGE_LIMIT_EDGE || inspection.height > IMAGE_LIMIT_EDGE) {
+  reasons.push(`longest edge ${Math.max(inspection.width, inspection.height)} px (limit ${IMAGE_LIMIT_EDGE} px)`);
+ }
+ if (inspection.size > IMAGE_LIMIT_BYTES) {
+  reasons.push(`${formatBytes(inspection.size)} (limit ${formatBytes(IMAGE_LIMIT_BYTES)})`);
+ }
+ const choice = await showDecision({
+  title: `Review ${field.label} image`,
+  message: 'This image is larger than the recommended Halo limits.',
+  details: `${inspectionSummary(inspection)}\n${reasons.join('\n')}`,
+  primary: 'Optimize', secondary: 'Use original', cancel: 'Cancel',
+ });
+ if (choice === 'cancel') return null;
+ if (choice === 'secondary') return { blob, inspection, optimized: false, decision: 'accepted' };
+ const optimized = await optimizeImage(blob, inspection, name);
+ return { ...optimized, optimized: optimized.blob !== blob, decision: 'optimized' };
+}
+
+function assignImage(key, url, blob, inspection, decision = 'ready') {
+ const input = $(imageFields[key].input);
+ state[key] = url;
+ if (input) input.value = url;
+ imageRecords.set(key, { urlKey: normalizeImageUrl(url), blob, inspection, decision });
+ render();
+ updateImageStatus();
+}
+
+async function pickImage(key) {
+ const field = imageFields[key];
+ const previous = state[key];
+ setRootBusy(true);
+ setNotice('');
+ try {
+  const broker = await loadBroker();
+  const picked = await broker.open({
+   accept: IMAGE_ACCEPT,
+   read: 'blob',
+   metadata: false,
+   title: `Choose a ${field.label} image`,
+   description: 'JPEG, PNG, or WebP. SVG is not supported.',
+  });
+  if (!picked) return;
+  if (Array.isArray(picked) || !picked.file || typeof picked.file !== 'object'
+      || !['local', 'sharepoint'].includes(picked.provider)) {
+   brokerFailure = 'Image picker is unavailable. Manual URLs still work. File Broker returned an invalid open result.';
+   setRootBusy(false);
+   throw new Error(brokerFailure);
+  }
+  const blob = picked.blob || picked.nativeFile;
+  if (!(blob instanceof Blob)) {
+   brokerFailure = 'Image picker is unavailable. Manual URLs still work. File Broker did not return readable image bytes.';
+   setRootBusy(false);
+   throw new Error(brokerFailure);
+  }
+  const name = picked.file?.name || blob?.name || `${field.label}-image`;
+  let directUrl = picked.provider === 'sharepoint'
+   ? checkedDirectUrl(picked.file.url, 'open')
+   : '';
+  const inspection = await inspectBlob(blob, name);
+  const reviewed = await optimizationDecision(field, blob, inspection, name);
+  if (!reviewed) return;
+  if (picked.provider !== 'sharepoint' || reviewed.optimized) {
+   const saved = await saveToSharePoint(broker, reviewed.blob, reviewed.inspection, name, {
+    start: picked.provider === 'sharepoint' ? sharePointSaveStart(picked) : null,
+    addOptimizedSuffix: picked.provider !== 'sharepoint' && reviewed.optimized,
+   });
+   if (!saved) return;
+   directUrl = saved.url;
+  }
+  if (!directUrl) throw new Error('The selected image does not have a direct SharePoint URL.');
+  assignImage(key, directUrl, reviewed.blob, reviewed.inspection, reviewed.decision);
+  setNotice(`${field.label[0].toUpperCase() + field.label.slice(1)} image ready: ${inspectionSummary(reviewed.inspection)}.`, 'info');
+ } catch (error) {
+  state[key] = previous;
+  const message = errorMessage(error);
+  if (message) setNotice(message, 'error');
+ } finally {
+  setRootBusy(false);
+  updateImageStatus();
+ }
+}
+
+async function inspectUrlForOutput(key) {
+ const field = imageFields[key];
+ const source = String(state[key] || '').trim();
+ if (!source) return true;
+ const urlKey = normalizeImageUrl(source);
+ const cached = imageRecords.get(key);
+ if (cached?.urlKey === urlKey) {
+  if (['ready', 'accepted', 'optimized', 'cors-accepted'].includes(cached.decision)) return true;
+ }
+ let blob;
+ try {
+  const response = await fetch(source, { mode: 'cors', credentials: 'same-origin' });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  blob = await response.blob();
+ } catch (error) {
+  const choice = await showDecision({
+   title: `Could not inspect ${field.label} image`,
+   message: 'The URL may still display, but its host did not allow Halo to inspect the pixels.',
+   details: `${source}\n${error?.message || error}\nContinue only if you trust this image and its size.`,
+   primary: 'Continue', cancel: 'Cancel',
+  });
+  if (choice !== 'primary') return false;
+  imageRecords.set(key, { urlKey, blob: null, inspection: null, decision: 'cors-accepted' });
+  updateImageStatus();
+  return true;
+ }
+ const inspection = await inspectBlob(blob, source);
+ const sourceName = nameFromUrl(source, `${field.label}-image`);
+ const reviewed = await optimizationDecision(field, blob, inspection, sourceName);
+ if (!reviewed) return false;
+ if (reviewed.optimized) {
+  const broker = await loadBroker();
+  const saved = await saveToSharePoint(broker, reviewed.blob, reviewed.inspection, sourceName, {
+   addOptimizedSuffix: true,
+  });
+  if (!saved) return false;
+  assignImage(key, saved.url, reviewed.blob, reviewed.inspection, reviewed.decision);
+ } else {
+  imageRecords.set(key, { urlKey, blob, inspection, decision: reviewed.decision });
+  updateImageStatus();
+ }
+ return true;
+}
+
+async function guardOutputs() {
+ for (const key of Object.keys(imageFields)) {
+  if (!await inspectUrlForOutput(key)) return false;
+ }
+ return true;
+}
+
+function serializedAction(key, task) {
+ if (pendingActions.has(key)) return pendingActions.get(key);
+ const run = async () => {
+  setRootBusy(true);
+  setNotice('');
+  try {
+   if (!await guardOutputs()) return;
+   await task();
+  } catch (error) {
+   const message = errorMessage(error);
+   if (message) setNotice(message, 'error');
+  } finally { setRootBusy(false); }
+ };
+ const promise = outputTail.then(run, run);
+ outputTail = promise.catch(() => {});
+ pendingActions.set(key, promise);
+ promise.finally(() => pendingActions.delete(key));
+ return promise;
+}
+
+function blobForUrl(url) {
+ const key = normalizeImageUrl(url);
+ for (const record of imageRecords.values()) {
+  if (record.urlKey === key && record.blob) return record.blob;
+ }
+ return null;
+}
 function fillColorSelect(sel, includeNone) {
  if (includeNone) sel.add(new Option('None', 'transparent'));
  Object.entries(BRAND).forEach(([name, value]) => sel.add(new Option(`${name} ${value}`, value)));
@@ -139,6 +893,8 @@ function commentSafe(value) {
   twice must stay valid HTML. */
 const SCOPE_ID = String(Math.floor(100000 + Math.random() * 900000));
 const SCOPE_CLASS = `halo-${SCOPE_ID}`;
+let cachedComponentCss = null;
+let outputDirty = true;
 /* Rewrites the component stylesheet so every selector only matches inside
   this block's wrapper. Going through the CSSOM (rather than string surgery)
   keeps @media intact and drops all comments for free. */
@@ -155,6 +911,10 @@ function scopedComponentCss(scope) {
   return `${indent}${rule.cssText}`;   // @font-face and friends stay global
  };
  return [...sheet.cssRules].map(rule => render(rule)).join('\n');
+}
+function emittedComponentCss() {
+ if (cachedComponentCss === null) cachedComponentCss = scopedComponentCss(SCOPE_CLASS);
+ return cachedComponentCss;
 }
 function render() {
  const s = scene.style;
@@ -212,7 +972,15 @@ function render() {
  lbl('v-tsize', state.size); lbl('v-tx', state.textX); lbl('v-ty', state.textY);
  lbl('v-tw', state.textW || 'auto'); lbl('v-th', state.textH || 'auto');
  lbl('v-tpadx', state.padX); lbl('v-tpady', state.padY);
- emit();
+ outputDirty = true;
+ if (!$('code-view').hidden) flushOutput();
+}
+function flushOutput() {
+ if (outputDirty) {
+  emit();
+  outputDirty = false;
+ }
+ return out.textContent;
 }
 function emit() {
  const hasLink = state.href.trim() !== '';
@@ -243,7 +1011,7 @@ function emit() {
 `<!-- HALO BANNER '${commentSafe(state.photoAlt)}' ${SCOPE_ID} -->
 <div class="${SCOPE_CLASS}">
 <style>
-${scopedComponentCss(SCOPE_CLASS)}
+${emittedComponentCss()}
 </style>
 <${wrapperTag} class="halo-banner-link${hasLink ? ' has-link' : ''}"${hasLink ? ` href="${escapeAttribute(state.href)}"${state.target === '_blank' ? ' target="_blank" rel="noopener"' : ''}` : ''}>
 <div class="halo-banner" style="
@@ -292,9 +1060,12 @@ async function toDataUri(url, missed) {
  const source = String(url).trim();
  if (!source || source.startsWith('data:')) return source;
  try {
-  const response = await fetch(source, { mode: 'cors' });
-  if (!response.ok) throw new Error(response.status);
-  const blob = await response.blob();
+  let blob = blobForUrl(source);
+  if (!blob) {
+   const response = await fetch(source, { mode: 'cors', credentials: 'same-origin' });
+   if (!response.ok) throw new Error(response.status);
+   blob = await response.blob();
+  }
   return await new Promise((resolve, reject) => {
    const reader = new FileReader();
    reader.onload = () => resolve(reader.result);
@@ -495,6 +1266,10 @@ bindInput('lurl','href',String);
 bindInput('bgurl','bgImage',String);
 bindInput('purl','photoImage',String);
 bindInput('palt','photoAlt',String);
+$('purl').addEventListener('input', () => { imageRecords.delete('photoImage'); updateImageStatus(); });
+$('bgurl').addEventListener('input', () => { imageRecords.delete('bgImage'); updateImageStatus(); });
+$('pick-purl')?.addEventListener('click', () => pickImage('photoImage'));
+$('pick-bgurl')?.addEventListener('click', () => pickImage('bgImage'));
 [
  ['tfont','font'], ['tweight','weight'], ['tcolor','textColor'], ['tbg','textBg'],
  ['tbgo','textBgOpacity'], ['bg','bg'], ['rc','ringColor'], ['bgopacity','bgOpacity']
@@ -509,41 +1284,47 @@ $('bgrounded').checked = state.bgRounded;
 $('bgrounded').addEventListener('change', event => { state.bgRounded = event.target.checked; render(); });
 $('trad').checked = state.rounded;
 $('trad').addEventListener('change', event => { state.rounded = event.target.checked; render(); });
-$('copy').addEventListener('click', async event => {
- const label = event.currentTarget.querySelector('span');
- await navigator.clipboard.writeText(out.textContent);
- label.textContent = 'Copied';
- setTimeout(() => { label.textContent = 'Copy'; }, 1200);
+$('copy').addEventListener('click', event => {
+ const button = event.currentTarget;
+ serializedAction('copy', async () => {
+  await navigator.clipboard.writeText(flushOutput());
+  buttonLabel(button, 'Copied');
+  setTimeout(() => buttonLabel(button, 'Copy'), 1200);
+ });
 });
-$('svg').addEventListener('click', async event => {
+$('svg').addEventListener('click', event => {
  const button = event.currentTarget;
  const label = button.querySelector('span');
  const rest = label.textContent;
- button.disabled = true;
- label.textContent = 'Building';
- try {
-  const { svg, missed } = await buildStandaloneSvg();
-  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = `halo-banner-${SCOPE_ID}.svg`;
-  anchor.click();
-  URL.revokeObjectURL(url);
-  label.textContent = missed.length ? `${missed.length} image linked` : 'Saved';
- }
- catch (error) {
-  console.error('[halo] SVG export failed', error);
-  label.textContent = 'Failed';
- }
- button.disabled = false;
- setTimeout(() => { label.textContent = rest; }, 2000);
+ serializedAction('svg', async () => {
+  label.textContent = 'Building';
+  try {
+   const { svg, missed } = await buildStandaloneSvg();
+   const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+   const anchor = document.createElement('a');
+   anchor.href = url;
+   anchor.download = `halo-banner-${SCOPE_ID}.svg`;
+   anchor.click();
+   setTimeout(() => URL.revokeObjectURL(url), 1000);
+   label.textContent = missed.length ? `${missed.length} image linked` : 'Saved';
+  } catch (error) {
+   console.error('[halo] SVG export failed', error);
+   label.textContent = 'Failed';
+   throw error;
+  } finally { setTimeout(() => { label.textContent = rest; }, 2000); }
+ });
 });
 $('toggle-code').addEventListener('click', event => {
+ const button = event.currentTarget;
  const showing = !$('code-view').hidden;
- $('code-view').hidden = showing;
- $('panel-controls').hidden = !showing;
- event.currentTarget.querySelector('span').textContent = showing ? 'Show code' : 'Hide code';
- event.currentTarget.setAttribute('aria-expanded', String(!showing));
+ const toggle = () => {
+  $('code-view').hidden = showing;
+  $('panel-controls').hidden = !showing;
+  button.querySelector('span').textContent = showing ? 'Show code' : 'Hide code';
+  button.setAttribute('aria-expanded', String(!showing));
+ };
+ if (showing) toggle();
+ else serializedAction('show-code', () => { flushOutput(); toggle(); });
 });
 const stageInner = root.querySelector('.halo-stage-inner');
 const stageResizer = $('stage-resizer');
@@ -585,8 +1366,15 @@ stageResizer.addEventListener('keydown', event => {
 });
 link.addEventListener('click', e => e.preventDefault());
 render();
+updateImageStatus();
+root.setAttribute(INIT_STATE_ATTRIBUTE, 'ready');
+} catch (error) {
+ root.removeAttribute(INIT_STATE_ATTRIBUTE);
+ throw error;
+}
 }
 
 waitForElement('[data-halo-generator] img.halo__img', image => {
 	initGenerator(image.closest('[data-halo-generator]'));
 });
+})();

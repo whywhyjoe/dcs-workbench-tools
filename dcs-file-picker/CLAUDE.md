@@ -14,8 +14,10 @@ document libraries, including library metadata. The folder is named
 
 1. **Zero dependencies, no build step.** Vanilla ES modules, plain DOM. It must
    survive being bundled into a single file by esbuild and served from a
-   SharePoint library, so: no `import.meta.url`, no runtime asset fetches, no
-   CDN. That is why the CSS lives in `src/styles.js` as a string.
+   SharePoint library, so: no `import.meta.url` and no required CDN assets.
+   Provider requests and the explicitly configured optional favorite-sites
+   JSON are the only runtime fetches outside the module graph. The CSS lives in
+   `src/styles.js` as a string.
 1b. **`src/storage.js` is the only module that touches localStorage** — the
    same rule DCSPad's `state.js` follows, so the future SharePoint JSON store
    is a one-file swap.
@@ -37,6 +39,10 @@ document libraries, including library metadata. The folder is named
 6. **Cancelling resolves `null`.** It is never an exception.
 7. **Unavailable metadata columns are shown and explained**, never hidden, and
    never block the transfer.
+8. **Read ceilings are enforced at both available layers.** `broker.read()`
+   passes the effective `maxBytes` to providers and always retains its post-read
+   check. Providers may reject known-large bodies early, but must not be trusted
+   as the only enforcement point.
 
 ## File map
 
@@ -58,7 +64,7 @@ src/providers/sharepoint.js  /_api client: digest cache, listing, transfer,
                           ValidateUpdateListItem, site locator
 src/providers/memory.js   in-memory library for the demo and the tests
 demo/index.html + demo.js ten working examples + a theme switch, no network
-test/broker.test.mjs      32 headless tests
+test/broker.test.mjs      45 headless tests
 ```
 
 Design system: `C:\dev\repos\dcs-workbench-design-system` (tokens, the
@@ -74,7 +80,7 @@ python -m http.server 8655              # then open demo/index.html
 ```
 
 The tests cover everything reachable without a DOM. Dialog behaviour is checked
-by walking the eight demo buttons — do that after any change to `dialog.js`.
+by walking the ten demo examples — do that after any change to `dialog.js`.
 Live SharePoint behaviour can only be verified in a tenant.
 
 ## Gotchas already paid for
@@ -104,3 +110,7 @@ Live SharePoint behaviour can only be verified in a tenant.
   string and the module dies with a syntax error that names a CSS keyword
   ("Unexpected identifier 'display'"). Use quotes in comments there, and run
   the tests after editing `styles.js` — they import it, so they catch it.
+- **Listing rendering is incremental and cancellable.** Browsable entries are
+  appended in 200-row animation-frame batches. Any navigation, provider-mode
+  switch, close, or failure must invalidate the previous render token so stale
+  rows cannot appear in the new location. Every entry must remain reachable.

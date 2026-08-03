@@ -6,27 +6,31 @@ rules and traps that are not obvious from the source.
 This folder is one of several unrelated projects in the repo. Stay inside it and do not
 create dependencies on sibling folders.
 
-No build, no bundler, no package manager, no test runner. Do not add any. The tool has to
-survive being pasted whole into a SharePoint custom script web part, so it must stay a
-single self-contained HTML file plus one script.
+No build, no bundler, no package manager, no Halo test runner. Do not add any. The core
+tool has to survive being pasted whole into a SharePoint custom script web part, so it
+must stay one self-contained HTML payload plus its own runtime script. The reviewed File
+Broker module tree and pinned compressor are optional static runtime dependencies; their
+absence must leave the core tool usable.
 
 ## Layout of the code
 
-`halo-banner-maker.js` is one closure, `initGenerator(root)`, started by a `waitForElement`
-poll. Inside it:
+`halo-banner-maker.js` is a private classic-script IIFE containing one per-root closure,
+`initGenerator(root)`, started by a `waitForElement` poll. Its major areas, in source
+order, are:
 
-| Lines | What |
+| Area | What |
 |---|---|
-| 35–86 | `BRAND`, `HOVER_COLORS`, `DEFAULTS` — the knobs, meant to be edited |
-| 132–150 | `SCOPE_ID` / `SCOPE_CLASS` and `scopedComponentCss()` |
-| 151–204 | `render()` — pushes state into CSS custom properties on the preview |
-| 205–242 | `emit()` — builds the HTML snippet output |
-| 243–409 | The standalone SVG exporter |
-| 410–522 | Control binding |
+| Configuration and state | `BRAND`, `HOVER_COLORS`, `DEFAULTS`, image limits, runtime dependency configuration, and the two per-URL inspection records |
+| Image workflow | broker loading, JPEG/PNG/WebP inspection, alpha detection, optimization, SharePoint save, direct-URL validation, and output guards |
+| Banner component | `SCOPE_ID` / `SCOPE_CLASS`, `scopedComponentCss()`, `render()`, and `emit()` |
+| Standalone SVG | image fetch/Blob reuse, text measurement, geometry duplication, and download |
+| Bindings | sliders, selects, text inputs, pick buttons, Copy, Show code, SVG, and resize rail |
 
-`render()` is the single path from state to screen; every control calls it and it calls
-`emit()` at the end. Add new controls by binding them to `state` and letting `render()` do
-the rest — do not touch the DOM from an event handler.
+`render()` is the single path from state to the preview; every control calls it. It marks
+the emitted output dirty and refreshes it immediately only while the code panel is visible.
+Copy and Show code must call `flushOutput()` after their image guard so they always act on
+the latest state. Add new controls by binding them to `state` and letting `render()` do the
+rest — do not update preview DOM directly from an event handler.
 
 ## Hard invariants
 
@@ -81,6 +85,18 @@ are listed in `RESTYLE-PLAN.md` §0 and exist because they ship inside generated
 deliberately drifted rules, under host-page CSS that reuses the same class names. If you
 touch `scopedComponentCss()`, open that file and confirm block 1 still renders bold text
 and a white ring.
+
+**9. The image workflow has two reviewed, static runtime dependencies.** The DCS File
+Broker must be deployed as an immutable browser-ESM `src/` tree, not as a lone
+`file-broker.js` and not from a mutable branch URL. Image optimization lazily loads the
+pinned `vendor/browser-image-compression-2.0.2.js` UMD asset and uses native Canvas as its
+fallback. Configure these with `window.HALO_IMAGE_PICKER_CONFIG` before the Halo runtime
+script; README lists the exact supported keys (`toolsBaseUrl`, `brokerVersion`,
+`brokerModuleUrl`, `siteCatalogUrl`, `compressionScriptUrl`, `defaultProvider`, and
+`sharePoint`). The local sibling broker path is the sanctioned development exception to
+this folder's normal isolation rule. If either dependency is unavailable, manual URL
+entry and existing outputs must keep working. Do not add an npm toolchain, public runtime
+CDN, upload service, server processor, or another unreviewed compressor dependency.
 
 ## Verifying an export change
 
@@ -139,10 +155,10 @@ a real HTTP server.
 **The deployed JS has a different filename** — `halo-banner-generator.js` on SharePoint
 versus `halo-banner-maker.js` here — and its own `?c=` cache-buster that must be bumped.
 
-**`initGenerator` is not idempotent.** It binds listeners unconditionally, so running it
-twice double-binds everything. The page references both a local and a SharePoint copy of
-the script; only one resolves in any given environment today, but do not add a third entry
-point.
+**Initialization is guarded on the generator root.** The runtime records `initializing`
+before it binds listeners and `ready` after the first render. A second local/deployed
+runtime evaluation must leave that root alone. If synchronous initialization throws, the
+guard is removed so a corrected runtime can retry; preserve that rollback behavior.
 
 **Blend modes need an isolation context.** The component sets `isolation: isolate` on
 `.halo-banner`; the SVG mirrors it with `style="isolation:isolate"` on the root group.

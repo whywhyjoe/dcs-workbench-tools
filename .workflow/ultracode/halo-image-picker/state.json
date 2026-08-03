@@ -1,0 +1,38 @@
+{
+  "title": "Halo image picker and optimization",
+  "slug": "halo-image-picker",
+  "created_at": "2026-08-03T00:15:30-04:00",
+  "updated_at": "2026-08-03T00:59:04-04:00",
+  "status": "complete",
+  "mode": "delegated",
+  "baseline_ref": "07a46f6aaec70368df201584344e4c1cdcea5356",
+  "risk_level": "high",
+  "eval_contract": { "level": "full", "path": "eval-contract.md", "status": "checked" },
+  "approval": { "required": false, "granted": null, "notes": "Implementation requested; deploy/publish excluded." },
+  "delegation": {
+    "native_agent_available": true,
+    "native_agent_planned": true,
+    "native_agent_used": true,
+    "agent_count": 5,
+    "wave_count": 2,
+    "no_delegation_reason": "",
+    "notes": "Original agents ended in an app crash; broker/UI completed, runtime recovered by packet 04, packet 05 is independent review."
+  },
+  "packets": [
+    { "id": "01-broker", "status": "complete", "owner": "write-capable-agent", "write_scope": ["dcs-file-picker/"], "result_path": "results/01-broker.md" },
+    { "id": "02-halo-ui", "status": "complete", "owner": "write-capable-agent", "write_scope": ["halo-banner/halo-banner-maker.html", "halo-banner/halo-overrides.css", "halo-banner/README.md", "halo-banner/AGENTS.md"], "result_path": "results/02-halo-ui.md" },
+    { "id": "03-halo-runtime", "status": "skipped", "owner": "write-capable-agent", "write_scope": ["halo-banner/halo-banner-maker.js", "halo-banner/vendor/"], "result_path": "results/03-halo-runtime.md" },
+    { "id": "04-runtime-recovery", "status": "complete", "owner": "write-capable-agent", "write_scope": ["halo-banner/halo-banner-maker.js", "halo-banner/vendor/", "halo-banner/README.md", "halo-banner/AGENTS.md"], "result_path": "results/04-runtime-recovery.md" },
+    { "id": "05-independent-review", "status": "complete", "owner": "read-only-agent", "write_scope": [], "result_path": "results/05-independent-review.md" }
+  ],
+  "verification": {
+    "status": "complete",
+    "checks": [
+      { "name": "broker tests", "command": "node --test dcs-file-picker/test/broker.test.mjs", "required": true, "status": "passed", "evidence": "41/41 tests passed." },
+      { "name": "Halo JavaScript parse", "command": "node --check halo-banner/halo-banner-maker.js", "required": true, "status": "passed", "evidence": "Runtime and vendored compressor parse successfully." },
+      { "name": "inline CSS consistency", "command": "python halo-banner/inline-css.py then clean diff", "required": true, "status": "passed", "evidence": "Generated DCS and Halo override blocks refreshed; git diff --check passed." },
+      { "name": "local browser smoke", "command": "in-app Browser interaction and responsive checks", "required": true, "status": "passed", "evidence": "Picker fallback, local inspection, size prompt/cache, Show/Hide code, and 520px overflow checks passed." },
+      { "name": "live SharePoint smoke", "command": "manual authenticated browser checklist", "required": false, "status": "skipped", "evidence": "No authenticated tenant was available in the execution environment." }
+    ]
+  }
+}

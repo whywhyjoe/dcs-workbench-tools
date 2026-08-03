@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "sites": [
+    {
+      "label": "Team site",
+      "url": "/sites/Team",
+      "default": true,
+      "libraries": [
+        {
+          "label": "Documents",
+          "path": "Shared Documents"
+        },
+        {
+          "label": "Generated files",
+          "path": "Shared Documents/Generated",
+          "hint": "Approved output location"
+        }
+      ]
+    },
+    {
+      "label": "Brand assets",
+      "url": "/sites/Brand",
+      "libraries": [
+        "Site Assets"
+      ]
+    }
+  ]
+}

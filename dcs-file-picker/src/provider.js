@@ -24,7 +24,7 @@
 //                 changes, so a provider that spans several sites can answer
 //                 per site.
 //   list(location, { accept })          -> Promise<Listing>
-//   read(entry, { as })                 -> Promise<ReadResult>
+//   read(entry, { as, maxBytes })       -> Promise<ReadResult>
 //   write(location, name, data, opts)   -> Promise<WriteResult>
 //   pick({ accept, multiple })          -> Promise<ReadResult[]>   (browse:false only)
 //   getMetadata(target, { schema, mode })  -> Promise<MetadataState>
