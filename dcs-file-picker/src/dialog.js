@@ -759,6 +759,8 @@ function runDialog({
           name: entry.name,
           path: entry.path,
           url: entry.url || '',
+          providerData: entry.providerData ? { ...entry.providerData } : null,
+          webUrl: entry.providerData?.webUrl || location?.webUrl || '',
           size: read.size ?? entry.size ?? 0,
           modified: entry.modified || '',
           mimeType: read.mimeType || entry.mimeType || '',

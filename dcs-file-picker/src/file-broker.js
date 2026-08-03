@@ -310,5 +310,9 @@ export {
 export { defineProvider, finalizeListing, CAPABILITY_DEFAULTS } from './provider.js';
 export { formatBytes, formatDate } from './util/paths.js';
 export { normalizeSiteCatalog, loadSiteCatalog } from './site-catalog.js';
+export { localProvider } from './providers/local.js';
+export {
+  sharePointProvider, resolveSharePointContext, findSharePointContext, directUrlForPath,
+} from './providers/sharepoint.js';
 export { createLocalStore, createMemoryStore, createNullStore, createRecall } from './storage.js';
 export { FILE_BROKER_THEMES, ensureStyles } from './styles.js';

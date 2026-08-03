@@ -120,13 +120,20 @@ export function normalizeSiteCatalog(input) {
 /** Fetch a catalog document — `sites: loadSiteCatalog('/sites/App/config.json')`. */
 export function loadSiteCatalog(url, { fetchImpl = (...args) => globalThis.fetch(...args) } = {}) {
   return async () => {
-    const response = await fetchImpl(url, {
-      credentials: 'same-origin',
-      headers: { Accept: 'application/json' },
-      cache: 'no-cache',
-    });
-    if (!response.ok) return [];
-    try { return await response.json(); }
-    catch { return []; }
+    try {
+      const response = await fetchImpl(url, {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' },
+        cache: 'no-cache',
+      });
+      if (!response?.ok) return [];
+      const document = await response.json();
+      const sites = Array.isArray(document) ? document : (document?.sites || document?.value);
+      return Array.isArray(sites) ? document : [];
+    } catch {
+      // Favorites improve navigation; a missing, blocked, offline, or malformed
+      // central document must never make the provider (or its host app) fail.
+      return [];
+    }
   };
 }

@@ -1064,6 +1064,54 @@ a:hover { color: var(--accent-hi); text-decoration: underline; }
    glyph itself is untouched — what goes is the gap in front of it. */
 .dcs-select { padding-right: 18px; }
 
+/* URL fields keep manual entry, but gain one welded icon action at the same
+   28px control tier. The shared border makes the pair read as one control and
+   avoids a loose glyph button in Halo's already-dense rail. */
+.halo-url-picker {
+ display: flex; min-width: 0; height: 28px;
+ background: var(--bg-0); border: 1px solid var(--border-strong);
+ border-radius: var(--radius-m);
+ transition: border-color var(--dur-tint), box-shadow var(--dur-tint);
+}
+.halo-url-picker:focus-within {
+ border-color: var(--accent-soft-line); box-shadow: 0 0 0 2px var(--accent-ring);
+}
+.halo-url-picker .dcs-input {
+ flex: 1 1 auto; height: 26px; border: 0; border-radius: var(--radius-m) 0 0 var(--radius-m);
+ box-shadow: none;
+}
+.halo-upload-button {
+ flex: none; width: 28px; height: 26px; padding: 0;
+ display: inline-flex; align-items: center; justify-content: center;
+ color: var(--fg-dim); background: transparent;
+ border: 0; border-left: 1px solid var(--border); border-radius: 0;
+ cursor: pointer;
+ transition: color var(--dur-tint), background var(--dur-tint);
+}
+.halo-upload-button:hover { color: var(--fg); background: var(--bg-2); }
+.halo-upload-button:focus-visible {
+ position: relative; z-index: 1;
+ outline: 2px solid var(--accent-soft-line); outline-offset: -2px;
+}
+.halo-upload-button:disabled { color: var(--fg-ghost); background: transparent; cursor: default; }
+
+/* Both inspected image sizes share one compact header readout. A single warn
+   glyph appears only when either source crosses Halo's output guard. */
+.halo-image-status {
+ display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px;
+ min-width: 0; max-width: 170px; margin-left: auto;
+ color: var(--fg-dim); font: 500 10.5px/1 var(--mono); white-space: nowrap;
+}
+.halo-image-status-text { overflow: hidden; text-overflow: ellipsis; }
+.halo-size-warning { display: inline-flex; flex: none; color: var(--warn); }
+
+/* On narrow screens the header may wrap once; all actions and the live source
+   status remain visible without shrinking icon hit targets. */
+@media (max-width: 560px) {
+ .dcs-tool-head { flex-wrap: wrap; padding-block: 6px; }
+ .halo-image-status { order: 4; flex: 1 0 100%; max-width: none; justify-content: flex-start; margin-left: 24px; }
+}
+
 /* Colour row, the one place the column grid is broken. The two swatch
    dropdowns have to show a full "Green #646c76" (109px); the opacity dropdown
    never holds more than "100%" (59px), so it pays for them. Measured against
@@ -1078,6 +1126,44 @@ a:hover { color: var(--accent-hi); text-decoration: underline; }
    plain is for rows of 16px sliders, which already land level. */
 .halo-check-field { justify-content: flex-end; }
 .halo-check-field-lift { padding-bottom: 6px; }
+
+/* --- async workflow surfaces ------------------------------------------ */
+
+/* Runtime changes data-kind rather than swapping system classes so a single
+   persistent live region can announce each result without DOM churn. */
+.halo-notice { margin: 6px 10px 2px; align-items: flex-start; }
+.halo-notice[data-kind="info"] {
+ color: var(--info); background: var(--info-soft); border-color: var(--info-soft-line);
+}
+.halo-notice[data-kind="warning"] {
+ color: var(--warn); background: var(--warn-soft); border-color: var(--warn-soft-line);
+}
+.halo-notice[data-kind="error"] {
+ color: var(--error-fg); background: var(--error-bg); border-color: var(--error-soft-line);
+}
+
+.halo-dialog-details {
+ margin: 0; padding: 9px 10px;
+ color: var(--fg-row); background: var(--bg-1);
+ border: 1px solid var(--border); border-radius: var(--radius-m);
+ font: 11px/1.5 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.halo-progress-meter { width: 100%; height: 8px; accent-color: var(--accent); }
+.halo-progress-meter::-webkit-progress-bar {
+ background: var(--bg-0); border: 1px solid var(--border-strong); border-radius: var(--radius-s);
+}
+.halo-progress-meter::-webkit-progress-value { background: var(--accent); border-radius: var(--radius-s); }
+.halo-progress-meter::-moz-progress-bar { background: var(--accent); border-radius: var(--radius-s); }
+
+/* Serialized image work marks the complete instrument busy. Trigger buttons
+   are disabled by the runtime; the status spinner supplies the visual state. */
+.dcs-tool[data-busy="true"] { cursor: progress; }
+.dcs-tool[data-busy="true"] button:disabled { cursor: progress; }
+.dcs-tool[data-busy="true"] .halo-image-status::before {
+ content: ""; flex: none; width: 10px; height: 10px;
+ border: 1px solid var(--border-strong); border-top-color: var(--accent);
+ border-radius: 50%; animation: dcs-spin var(--dur-beat) linear infinite;
+}
 
 /* --- canvas ------------------------------------------------------------- */
 
@@ -1275,9 +1361,16 @@ a:hover { color: var(--accent-hi); text-decoration: underline; }
 <span>Show code</span>
 </button>
 </span>
+<div class="halo-image-status" role="status" aria-live="polite" aria-atomic="true" title="Inspected foreground and background image sizes">
+<span class="halo-image-status-text" id="image-sizes">FG &mdash; / BG &mdash;</span>
+<span class="halo-size-warning" id="image-size-warning" role="img" aria-label="One or more images may need optimization" hidden>
+<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.2 14 13H2L8 2.2Z"/><path d="M8 6v3.4M8 11.7h.01"/></svg>
+</span>
+</div>
 </div>
 <div class="dcs-tool-body has-canvas">
 <div class="dcs-controls">
+<div class="dcs-notice halo-notice" id="halo-notice" data-kind="info" role="status" aria-live="polite" aria-atomic="true" hidden><span class="dcs-notice-body"></span></div>
 <div class="panel-controls" id="panel-controls">
 <div class="dcs-group">
 <div class="dcs-group-title">Design: halo</div>
@@ -1306,7 +1399,10 @@ a:hover { color: var(--accent-hi); text-decoration: underline; }
 <input class="dcs-slider" type="range" id="ppy" min="0" max="100" step="1"></div>
 </div>
 <div class="dcs-row">
-<div class="dcs-field"><label class="dcs-label">Photo URL</label><input class="dcs-input dcs-input-mono" type="text" id="purl" placeholder="https://..." spellcheck="false"></div>
+<div class="dcs-field"><label class="dcs-label" for="purl">Photo URL</label>
+<div class="halo-url-picker"><input class="dcs-input dcs-input-mono" type="text" id="purl" placeholder="https://..." spellcheck="false"><button class="halo-upload-button" id="pick-purl" type="button" title="Choose a foreground image from a local file or SharePoint" aria-label="Choose a foreground image from a local file or SharePoint">
+<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10.2V2.8M5.2 5.6 8 2.8l2.8 2.8M3 11.6v1.2c0 .4.3.7.7.7h8.6c.4 0 .7-.3.7-.7v-1.2"/></svg>
+</button></div></div>
 <div class="dcs-field"><label class="dcs-label">Photo alt text</label><input class="dcs-input" type="text" id="palt"></div>
 </div>
 </div>
@@ -1368,12 +1464,36 @@ a:hover { color: var(--accent-hi); text-decoration: underline; }
 <div class="dcs-field halo-check-field halo-check-field-lift"><label class="dcs-check"><input type="checkbox" id="bgrounded"> Corner radius</label></div>
 </div>
 <div class="dcs-row dcs-row-3">
-<div class="dcs-field"><label class="dcs-label">Background image</label><input class="dcs-input dcs-input-mono" type="text" id="bgurl" placeholder="https://..." spellcheck="false"></div>
+<div class="dcs-field"><label class="dcs-label" for="bgurl">Background image</label>
+<div class="halo-url-picker"><input class="dcs-input dcs-input-mono" type="text" id="bgurl" placeholder="https://..." spellcheck="false"><button class="halo-upload-button" id="pick-bgurl" type="button" title="Choose a background image from a local file or SharePoint" aria-label="Choose a background image from a local file or SharePoint">
+<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10.2V2.8M5.2 5.6 8 2.8l2.8 2.8M3 11.6v1.2c0 .4.3.7.7.7h8.6c.4 0 .7-.3.7-.7v-1.2"/></svg>
+</button></div></div>
 <div class="dcs-field"><label class="dcs-label" data-custom-for="bgopacity">Overlay opacity</label><select class="dcs-select" id="bgopacity"></select></div>
 <div class="dcs-field halo-check-field halo-check-field-lift"><label class="dcs-check"><input type="checkbox" id="bgblend"> Multiply</label></div>
 </div>
 </div>
 </div>
+
+<dialog class="dcs-dialog" id="halo-decision" aria-labelledby="halo-decision-title" aria-describedby="halo-decision-message halo-decision-details">
+<div class="dcs-dialog-panel">
+<div class="dcs-dialog-head"><h2 id="halo-decision-title">Review image</h2></div>
+<p class="dcs-dialog-context" id="halo-decision-message"></p>
+<p class="halo-dialog-details" id="halo-decision-details" hidden></p>
+<div class="dcs-dialog-actions">
+<button class="dcs-btn" id="halo-decision-secondary" type="button">Use original</button>
+<button class="dcs-btn" id="halo-decision-cancel" type="button">Cancel</button>
+<button class="dcs-btn dcs-btn-soft" id="halo-decision-primary" type="button">Optimize</button>
+</div>
+</div>
+</dialog>
+
+<dialog class="dcs-dialog" id="halo-progress" aria-labelledby="halo-progress-label">
+<div class="dcs-dialog-panel">
+<div class="dcs-dialog-head"><h2 id="halo-progress-label">Preparing image</h2></div>
+<progress class="halo-progress-meter" id="halo-progress-bar" max="1" aria-labelledby="halo-progress-label"></progress>
+<div class="dcs-dialog-actions"><button class="dcs-btn" id="halo-progress-cancel" type="button">Cancel</button></div>
+</div>
+</dialog>
 <div class="halo-code-view" id="code-view" hidden><pre class="halo-code" id="out"></pre></div>
 </div>
 <div class="dcs-canvas">

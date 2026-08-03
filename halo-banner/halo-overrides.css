@@ -87,6 +87,54 @@
    glyph itself is untouched — what goes is the gap in front of it. */
 .dcs-select { padding-right: 18px; }
 
+/* URL fields keep manual entry, but gain one welded icon action at the same
+   28px control tier. The shared border makes the pair read as one control and
+   avoids a loose glyph button in Halo's already-dense rail. */
+.halo-url-picker {
+ display: flex; min-width: 0; height: 28px;
+ background: var(--bg-0); border: 1px solid var(--border-strong);
+ border-radius: var(--radius-m);
+ transition: border-color var(--dur-tint), box-shadow var(--dur-tint);
+}
+.halo-url-picker:focus-within {
+ border-color: var(--accent-soft-line); box-shadow: 0 0 0 2px var(--accent-ring);
+}
+.halo-url-picker .dcs-input {
+ flex: 1 1 auto; height: 26px; border: 0; border-radius: var(--radius-m) 0 0 var(--radius-m);
+ box-shadow: none;
+}
+.halo-upload-button {
+ flex: none; width: 28px; height: 26px; padding: 0;
+ display: inline-flex; align-items: center; justify-content: center;
+ color: var(--fg-dim); background: transparent;
+ border: 0; border-left: 1px solid var(--border); border-radius: 0;
+ cursor: pointer;
+ transition: color var(--dur-tint), background var(--dur-tint);
+}
+.halo-upload-button:hover { color: var(--fg); background: var(--bg-2); }
+.halo-upload-button:focus-visible {
+ position: relative; z-index: 1;
+ outline: 2px solid var(--accent-soft-line); outline-offset: -2px;
+}
+.halo-upload-button:disabled { color: var(--fg-ghost); background: transparent; cursor: default; }
+
+/* Both inspected image sizes share one compact header readout. A single warn
+   glyph appears only when either source crosses Halo's output guard. */
+.halo-image-status {
+ display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px;
+ min-width: 0; max-width: 170px; margin-left: auto;
+ color: var(--fg-dim); font: 500 10.5px/1 var(--mono); white-space: nowrap;
+}
+.halo-image-status-text { overflow: hidden; text-overflow: ellipsis; }
+.halo-size-warning { display: inline-flex; flex: none; color: var(--warn); }
+
+/* On narrow screens the header may wrap once; all actions and the live source
+   status remain visible without shrinking icon hit targets. */
+@media (max-width: 560px) {
+ .dcs-tool-head { flex-wrap: wrap; padding-block: 6px; }
+ .halo-image-status { order: 4; flex: 1 0 100%; max-width: none; justify-content: flex-start; margin-left: 24px; }
+}
+
 /* Colour row, the one place the column grid is broken. The two swatch
    dropdowns have to show a full "Green #646c76" (109px); the opacity dropdown
    never holds more than "100%" (59px), so it pays for them. Measured against
@@ -101,6 +149,44 @@
    plain is for rows of 16px sliders, which already land level. */
 .halo-check-field { justify-content: flex-end; }
 .halo-check-field-lift { padding-bottom: 6px; }
+
+/* --- async workflow surfaces ------------------------------------------ */
+
+/* Runtime changes data-kind rather than swapping system classes so a single
+   persistent live region can announce each result without DOM churn. */
+.halo-notice { margin: 6px 10px 2px; align-items: flex-start; }
+.halo-notice[data-kind="info"] {
+ color: var(--info); background: var(--info-soft); border-color: var(--info-soft-line);
+}
+.halo-notice[data-kind="warning"] {
+ color: var(--warn); background: var(--warn-soft); border-color: var(--warn-soft-line);
+}
+.halo-notice[data-kind="error"] {
+ color: var(--error-fg); background: var(--error-bg); border-color: var(--error-soft-line);
+}
+
+.halo-dialog-details {
+ margin: 0; padding: 9px 10px;
+ color: var(--fg-row); background: var(--bg-1);
+ border: 1px solid var(--border); border-radius: var(--radius-m);
+ font: 11px/1.5 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.halo-progress-meter { width: 100%; height: 8px; accent-color: var(--accent); }
+.halo-progress-meter::-webkit-progress-bar {
+ background: var(--bg-0); border: 1px solid var(--border-strong); border-radius: var(--radius-s);
+}
+.halo-progress-meter::-webkit-progress-value { background: var(--accent); border-radius: var(--radius-s); }
+.halo-progress-meter::-moz-progress-bar { background: var(--accent); border-radius: var(--radius-s); }
+
+/* Serialized image work marks the complete instrument busy. Trigger buttons
+   are disabled by the runtime; the status spinner supplies the visual state. */
+.dcs-tool[data-busy="true"] { cursor: progress; }
+.dcs-tool[data-busy="true"] button:disabled { cursor: progress; }
+.dcs-tool[data-busy="true"] .halo-image-status::before {
+ content: ""; flex: none; width: 10px; height: 10px;
+ border: 1px solid var(--border-strong); border-top-color: var(--accent);
+ border-radius: 50%; animation: dcs-spin var(--dur-beat) linear infinite;
+}
 
 /* --- canvas ------------------------------------------------------------- */
 

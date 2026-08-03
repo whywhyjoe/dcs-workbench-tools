@@ -100,6 +100,60 @@ some preview panes never reload it at all.
 The second `<script>` tag points at the deployed copy on SharePoint. It does not resolve
 outside the tenant and is inert locally; only the relative `halo-banner-maker.js` runs.
 
+## Image picker dependency and configuration
+
+The URL fields still accept manual values. Their upload buttons add local/SharePoint
+selection when the optional **DCS File Broker** module is available; failure to load that
+module must not block manual URLs, preview, Copy, Show code, or SVG.
+
+The sanctioned deployment is a static, immutable copy of the broker's complete `src/`
+module tree. `file-broker.js` imports sibling modules, so publishing that one file alone is
+not enough. Host the tree on the same SharePoint tenant with a versioned path and serve
+JavaScript with the correct MIME type. Do not point production Halo pages at a mutable
+branch URL.
+
+Define `window.HALO_IMAGE_PICKER_CONFIG` before `halo-banner-maker.js` (and before the
+deployed `halo-banner-generator.js`) to override the tenant-generic defaults:
+
+```html
+<script>
+window.HALO_IMAGE_PICKER_CONFIG = {
+  toolsBaseUrl: "/sites/Tools/SiteAssets/Code/tools/",
+  brokerVersion: "v1.0.0",
+  brokerModuleUrl: "/sites/Tools/SiteAssets/Code/tools/dcs-file-broker/v1.0.0/src/file-broker.js",
+  siteCatalogUrl: "/sites/Tools/SiteAssets/Code/tools/dcs-file-broker/sites.json",
+  compressionScriptUrl: "/sites/Tools/SiteAssets/Code/tools/halo-banner/vendor/browser-image-compression-2.0.2.js",
+  defaultProvider: "sharepoint",
+  sharePoint: { allowSiteSwitch: true }
+};
+</script>
+```
+
+| Key | Purpose |
+|---|---|
+| `toolsBaseUrl` | Optional base for shared DCS Workbench assets. On SharePoint it defaults to `[current web]/SiteAssets/Code/tools/`; it is not hostname-specific. |
+| `brokerVersion` | Immutable broker folder below `dcs-file-broker/`; defaults to `v1.0.0`. |
+| `brokerModuleUrl` | Full broker ESM override. Otherwise it is derived from `toolsBaseUrl` and `brokerVersion`; locally it defaults to `../dcs-file-picker/src/file-broker.js`. |
+| `siteCatalogUrl` | Favorites JSON override. On SharePoint it defaults to the unversioned `dcs-file-broker/sites.json`; set it to `false` to disable the catalog. |
+| `compressionScriptUrl` | Full URL of the reviewed browser-image-compression 2.0.2 UMD asset. Otherwise it is derived from `toolsBaseUrl`; locally it defaults to `vendor/browser-image-compression-2.0.2.js`. |
+| `defaultProvider` | Optional initial provider id; defaults to `sharepoint`. |
+| `sharePoint` | Optional object forwarded to `sharePointProvider`; `siteCatalogUrl` takes precedence for `sites`. |
+
+SharePoint defaults are derived from the injected DCS context, standard SharePoint page
+context, or the current `/sites/<name>` / `/teams/<name>` URL. A nonstandard deployment
+can always provide `toolsBaseUrl` or the three full URL overrides explicitly.
+
+Image inspection uses browser-native image decoding and Canvas pixel checks. Optimization
+loads the pinned, reviewed `vendor/browser-image-compression-2.0.2.js` UMD file lazily and
+runs it on the main thread (`useWebWorker: false`) to avoid SharePoint CSP worker failures.
+That file is the upstream browser distribution from
+[`browser-image-compression` 2.0.2](https://github.com/Donaldcwl/browser-image-compression/tree/2.0.2)
+and its MIT terms are retained in `vendor/LICENSE.browser-image-compression.txt`.
+There is no npm/build step, public runtime CDN, upload service, or server-side processing.
+Opaque PNGs may become WebP; PNGs with actual transparent pixels remain PNG and receive a
+single transparency-preserving resize/re-encode, so a best-effort result may remain above
+400 KiB. If the compressor cannot load, Canvas provides an in-browser fallback.
+
 ## Editing styles
 
 Never hand-edit the `<style id="dcs-workbench">` or `<style id="halo-overrides">` blocks in

@@ -21,9 +21,10 @@ Workbench the moment it opens.
 ## Quick start
 
 ```js
-import { createFileBroker, DCSPAD_METADATA_FIELDS } from './src/file-broker.js';
-import { localProvider } from './src/providers/local.js';
-import { sharePointProvider } from './src/providers/sharepoint.js';
+import {
+  createFileBroker, DCSPAD_METADATA_FIELDS,
+  localProvider, sharePointProvider, loadSiteCatalog,
+} from './src/file-broker.js';
 
 const broker = createFileBroker({
   providers: [
@@ -102,7 +103,7 @@ error.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `accept` | broker default, else any | see [File types](#file-types) |
-| `start` | `{ provider, path }` | where the dialog opens |
+| `start` | `{ provider, path, webUrl }` | where the dialog opens; `webUrl` preserves an alternate SharePoint site |
 | `read` | `'text'` | `'text'` · `'arrayBuffer'` · `'blob'` · `'none'` |
 | `multiple` | `false` | resolves an **array** when true |
 | `metadata` | broker default | `false` to skip, or a schema override |
@@ -114,7 +115,7 @@ error.
 ```js
 {
   provider: 'sharepoint',
-  file: { name, path, url, size, modified, mimeType, category },
+  file: { name, path, url, webUrl, providerData, size, modified, mimeType, category },
   text,            // or data / blob / nativeFile, per `read`
   metadata: { title: 'Pad export', … } | null,
   metadataState,   // the raw provider state, if you need availability details
@@ -128,7 +129,7 @@ error.
 | `data` | **required** | string, `Blob`, `ArrayBuffer`, typed array, or `() => any of those` |
 | `suggestedName` | `''` | prefills the name box |
 | `accept` | broker default | filters the listing and the OS Save dialog |
-| `start` | — | `{ provider, path }` |
+| `start` | — | `{ provider, path, webUrl }` |
 | `metadata` | broker default | **values** to prefill (`{ title: 'x' }`) or a schema override (`{ fields: [...] }`) |
 | `maxWriteBytes` | 50 MB | SharePoint's single-request ceiling |
 
@@ -223,6 +224,14 @@ sharePointProvider({ sites: CATALOG })                       // inline
 sharePointProvider({ sites: loadSiteCatalog('/sites/App/file-config.json') })  // fetched once
 sharePointProvider({ sites: CATALOG, discoverLibraries: false })  // only what you listed
 ```
+
+For the canonical JSON sample and the release/deployment pattern, see
+[`config/favorite-sites.example.json`](config/favorite-sites.example.json) and
+[`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md). Keep broker JavaScript in an
+immutable versioned directory, while the favorites URL may remain stable and
+centrally managed. Loading that URL is best-effort: missing, denied, offline,
+non-JSON, or malformed configuration becomes an empty catalog rather than an
+application failure.
 
 The catalog's `default: true` site is where the dialog opens the first time.
 `discoverLibraries: false` hides the site's other libraries, leaving exactly the
@@ -321,9 +330,11 @@ src/providers/sharepoint.js  same-tenant document libraries over /_api
 src/providers/memory.js   an in-memory library for demos and tests
 src/util/{paths,errors}.js
 demo/                     ten working examples, no network needed
-test/broker.test.mjs      32 headless tests (node --test)
+test/broker.test.mjs      headless contract tests (node --test)
 docs/EXTENDING.md         add a provider, a category, a field type, or your own UI
 docs/DCSPAD-MIGRATION.md  how DCSPad and the SP Workbench map onto this
+docs/DISTRIBUTION.md      immutable releases + central favorite-sites operations
+config/                   canonical favorite-sites JSON example
 ```
 
 ## Errors

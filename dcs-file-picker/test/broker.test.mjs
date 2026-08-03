@@ -20,11 +20,19 @@ import {
 import {
   normalizePath, parentPath, joinPath, isWithin, fileNameProblem, formatBytes,
 } from '../src/util/paths.js';
-import { toFormValue, fromItemValue, neutralTypeFor } from '../src/providers/sharepoint.js';
+import {
+  sharePointProvider, resolveSharePointContext, findSharePointContext, directUrlForPath,
+  toFormValue, fromItemValue, neutralTypeFor,
+} from '../src/providers/sharepoint.js';
 import { memoryProvider } from '../src/providers/memory.js';
-import { createFileBroker } from '../src/file-broker.js';
+import {
+  createFileBroker, localProvider as publicLocalProvider,
+  sharePointProvider as publicSharePointProvider, loadSiteCatalog as publicLoadSiteCatalog,
+  resolveSharePointContext as publicResolveSharePointContext,
+  findSharePointContext as publicFindSharePointContext,
+} from '../src/file-broker.js';
 import { defineProvider } from '../src/provider.js';
-import { normalizeSiteCatalog } from '../src/site-catalog.js';
+import { normalizeSiteCatalog, loadSiteCatalog } from '../src/site-catalog.js';
 import { createRecall, createMemoryStore, createLocalStore } from '../src/storage.js';
 import { FILE_BROKER_THEMES } from '../src/styles.js';
 
@@ -202,6 +210,209 @@ test('sharepoint: FieldValue conventions round-trip', () => {
   assert.deepEqual(fromItemValue(url, { Url: 'https://x.test', Description: 'X' }),
     { url: 'https://x.test', description: 'X' });
   assert.match(fromItemValue(date, '2026-03-04T05:06:00Z'), /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+});
+
+test('sharepoint: context resolution covers legacy, module-loader, and relative shapes', () => {
+  const legacy = resolveSharePointContext({
+    legacyPageContext: {
+      webAbsoluteUrl: 'https://contoso.sharepoint.com/sites/Legacy/',
+      formDigestValue: 'legacy-digest',
+      formDigestTimeoutSeconds: 900,
+    },
+  });
+  assert.deepEqual(legacy, {
+    webAbsoluteUrl: 'https://contoso.sharepoint.com/sites/Legacy',
+    formDigestValue: 'legacy-digest',
+    formDigestTimeoutSeconds: 900,
+  });
+
+  const modern = resolveSharePointContext({
+    pageContext: { web: { absoluteUrl: 'https://contoso.sharepoint.com/sites/Modern' } },
+  });
+  assert.equal(modern.webAbsoluteUrl, 'https://contoso.sharepoint.com/sites/Modern');
+
+  const fallback = resolveSharePointContext({
+    webAbsoluteUrl: 'not a URL',
+    legacyPageContext: { webAbsoluteUrl: 'https://contoso.sharepoint.com/sites/Fallback' },
+  });
+  assert.equal(fallback.webAbsoluteUrl, 'https://contoso.sharepoint.com/sites/Fallback');
+
+  const relative = resolveSharePointContext(
+    { webServerRelativeUrl: '/sites/Relative' },
+    { location: { origin: 'https://contoso.sharepoint.com' } },
+  );
+  assert.equal(relative.webAbsoluteUrl, 'https://contoso.sharepoint.com/sites/Relative');
+
+  const provider = sharePointProvider({
+    getContext: () => ({ legacyPageContext: { webAbsoluteUrl: legacy.webAbsoluteUrl } }),
+    webUrl: '/sites/Pinned',
+  });
+  assert.equal(provider.isAvailable(), true);
+  assert.equal(provider.locator.current(), 'https://contoso.sharepoint.com/sites/Pinned');
+});
+
+test('sharepoint: context inspection and absence fail gracefully', () => {
+  assert.equal(resolveSharePointContext({ webAbsoluteUrl: 'javascript:alert(1)' }), null);
+  assert.equal(resolveSharePointContext({}), null);
+  const provider = sharePointProvider({ getContext() { throw new Error('host denied access'); } });
+  assert.equal(provider.isAvailable(), false);
+  assert.throws(() => provider.locator.current(), (error) => error.code === 'not-available');
+  assert.equal(sharePointProvider({ webUrl: 'javascript:alert(1)' }).isAvailable(), false);
+});
+
+test('sharepoint: page context finder probes DCS globals and same-origin ancestors safely', () => {
+  const origin = 'https://contoso.sharepoint.com';
+  const stable = findSharePointContext({
+    location: { origin },
+    __DCS_SP_CONTEXT__: { webAbsoluteUrl: `${origin}/sites/Stable` },
+    __DCSPAD_SP_CONTEXT__: { webAbsoluteUrl: `${origin}/sites/Compatibility` },
+  });
+  assert.equal(stable.webAbsoluteUrl, `${origin}/sites/Stable`, 'stable adapter wins');
+
+  const compatibility = findSharePointContext({
+    location: { origin },
+    __DCSPAD_SP_CONTEXT__: { webAbsoluteUrl: `${origin}/sites/Compatibility` },
+  });
+  assert.equal(compatibility.webAbsoluteUrl, `${origin}/sites/Compatibility`);
+
+  const parent = {
+    location: { origin },
+    __DCS_SP_CONTEXT__: { webAbsoluteUrl: `${origin}/sites/Parent` },
+  };
+  const inherited = findSharePointContext({ location: { origin }, parent });
+  assert.equal(inherited.webAbsoluteUrl, `${origin}/sites/Parent`);
+
+  const top = {
+    location: { origin },
+    __DCSPAD_SP_CONTEXT__: { webAbsoluteUrl: `${origin}/sites/Top` },
+  };
+  const inheritedFromTop = findSharePointContext({ location: { origin }, top });
+  assert.equal(inheritedFromTop.webAbsoluteUrl, `${origin}/sites/Top`);
+
+  let guardedContextReads = 0;
+  const crossOrigin = {};
+  Object.defineProperty(crossOrigin, 'location', {
+    get() { throw new Error('cross-origin location'); },
+  });
+  Object.defineProperty(crossOrigin, '__DCS_SP_CONTEXT__', {
+    get() { guardedContextReads += 1; throw new Error('cross-origin context'); },
+  });
+  const absent = findSharePointContext({
+    location: { origin },
+    parent: crossOrigin,
+    top: crossOrigin,
+  });
+  assert.equal(absent, null);
+  assert.equal(guardedContextReads, 0, 'cross-origin context properties are never inspected');
+});
+
+test('sharepoint: page context finder uses the modern Site Pages module-loader fallback', () => {
+  const origin = 'https://contoso.sharepoint.com';
+  const featureId = 'b6917cb1-93a0-4b97-a84d-7cf49975d4ec';
+  const modern = findSharePointContext({
+    location: { origin },
+    spModuleLoader: {
+      _bundledComponents: {
+        [featureId]: {
+          PageManager: {
+            _instance: {
+              pageContext: {
+                legacyPageContext: {
+                  webAbsoluteUrl: `${origin}/sites/ModernPages`,
+                  formDigestValue: 'modern-digest',
+                  formDigestTimeoutSeconds: 1800,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  assert.deepEqual(modern, {
+    webAbsoluteUrl: `${origin}/sites/ModernPages`,
+    formDigestValue: 'modern-digest',
+    formDigestTimeoutSeconds: 1800,
+  });
+});
+
+test('sharepoint: direct browsing URLs encode every path segment', async () => {
+  const webUrl = 'https://contoso.sharepoint.com/sites/Team';
+  const path = "/sites/Team/Shared Documents/R&D 100% #1's?.png";
+  const expected = 'https://contoso.sharepoint.com/sites/Team/Shared%20Documents/'
+    + 'R%26D%20100%25%20%231%27s%3F.png';
+  assert.equal(directUrlForPath(webUrl, path), expected);
+
+  const provider = sharePointProvider({
+    webUrl,
+    fetchImpl: async (url) => new Response(JSON.stringify({
+      value: String(url).includes('/Folders?') ? [] : [{
+        Name: "R&D 100% #1's?.png",
+        ServerRelativeUrl: path,
+        Length: '12',
+      }],
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+  });
+  const listing = await provider.list({ webUrl, path: '/sites/Team/Shared Documents' });
+  assert.equal(listing.entries.find((entry) => entry.kind === 'file').url, expected);
+});
+
+test('sharepoint: writes return a direct URL rather than a sharing link', async () => {
+  const webUrl = 'https://contoso.sharepoint.com/sites/Team';
+  const path = '/sites/Team/Shared Documents/R&D #1.png';
+  let uploadEndpoint = '';
+  const provider = sharePointProvider({
+    webUrl,
+    fetchImpl: async (url) => {
+      if (String(url).endsWith('/_api/contextinfo')) {
+        return new Response(JSON.stringify({
+          FormDigestValue: 'digest',
+          FormDigestTimeoutSeconds: 1800,
+          WebFullUrl: webUrl,
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+      uploadEndpoint = String(url);
+      return new Response(JSON.stringify({ ServerRelativeUrl: path }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
+  });
+  const written = await provider.write(
+    { webUrl, path: '/sites/Team/Shared Documents' },
+    'R&D #1.png',
+    new Uint8Array([1, 2, 3]),
+  );
+  assert.equal(written.url,
+    'https://contoso.sharepoint.com/sites/Team/Shared%20Documents/R%26D%20%231.png');
+  assert.match(uploadEndpoint, /AddUsingPath/);
+  assert.ok(!written.url.includes('/_layouts/15/'), 'result is a browsing URL, not a sharing route');
+});
+
+test('sharepoint: blob reads derive byte size when Content-Length is absent', async () => {
+  const bytes = new Uint8Array([0, 1, 2, 3, 4, 255]);
+  const webUrl = 'https://contoso.sharepoint.com/sites/Team';
+  const provider = sharePointProvider({
+    webUrl,
+    fetchImpl: async () => new Response(bytes, {
+      status: 200,
+      headers: { 'Content-Type': 'application/octet-stream' },
+    }),
+  });
+  const result = await provider.read({
+    path: '/sites/Team/Shared Documents/image.png',
+    providerData: { webUrl },
+  }, { as: 'blob' });
+  assert.equal(result.size, bytes.byteLength);
+  assert.equal(result.blob.size, bytes.byteLength);
+});
+
+test('file-broker entry point exports the standard dependency-free providers', () => {
+  assert.equal(publicLocalProvider.name, 'localProvider');
+  assert.equal(publicSharePointProvider, sharePointProvider);
+  assert.equal(publicLoadSiteCatalog, loadSiteCatalog);
+  assert.equal(publicResolveSharePointContext, resolveSharePointContext);
+  assert.equal(publicFindSharePointContext, findSharePointContext);
 });
 
 // --------------------------------------------------------------------- paths
@@ -422,6 +633,24 @@ test('catalog: a resolved web URL matches its entry by URL or by path', () => {
   assert.ok(normalizeSiteCatalog([{ url: '/sites/Team' }])
     .byUrl('https://contoso.sharepoint.com/sites/Team'));
   assert.equal(catalog.byUrl('https://contoso.sharepoint.com/sites/Other'), null);
+});
+
+test('catalog: central loader degrades to an empty catalog on every fetch failure', async () => {
+  const offline = loadSiteCatalog('/config/favorite-sites.json', {
+    fetchImpl: async () => { throw new Error('offline'); },
+  });
+  assert.deepEqual(await offline(), []);
+
+  const missing = loadSiteCatalog('/config/favorite-sites.json', {
+    fetchImpl: async () => ({ ok: false }),
+  });
+  assert.deepEqual(await missing(), []);
+
+  const malformed = loadSiteCatalog('/config/favorite-sites.json', {
+    fetchImpl: async () => ({ ok: true, json: async () => ({ sites: 'not-an-array' }) }),
+  });
+  assert.deepEqual(await malformed(), []);
+  assert.deepEqual(normalizeSiteCatalog(await malformed()).sites, []);
 });
 
 // ------------------------------------------------------------------- storage

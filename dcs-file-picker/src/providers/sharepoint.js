@@ -14,8 +14,8 @@
 //   · document-library root folders have no list item, so the parent list is
 //     resolved through GetList(@listUrl) when ListItemAllFields is empty
 //
-// Off SharePoint (no _spPageContextInfo) isAvailable() is false and the dialog
-// simply does not offer this location.
+// Without a supported DCS/SharePoint page context, isAvailable() is false and
+// the dialog simply does not offer this location.
 
 import { defineProvider, finalizeListing } from '../provider.js';
 import { FileBrokerError } from '../util/errors.js';
@@ -181,13 +181,181 @@ export function fromItemValue(field, value) {
 
 // ---- context ---------------------------------------------------------------
 
+const CONTEXT_CHILDREN = [
+  'legacyPageContext', 'pageContext', 'context', 'spPageContextInfo',
+];
+
+function contextCandidates(value) {
+  const queue = [value];
+  const seen = new Set();
+  const candidates = [];
+  while (queue.length) {
+    const candidate = queue.shift();
+    if (!candidate || (typeof candidate !== 'object' && typeof candidate !== 'function')
+        || seen.has(candidate)) continue;
+    seen.add(candidate);
+    candidates.push(candidate);
+    for (const key of CONTEXT_CHILDREN) {
+      try { queue.push(candidate[key]); } catch { /* a host getter may be guarded */ }
+    }
+  }
+  return candidates;
+}
+
+function firstContextValue(candidates, paths) {
+  for (const candidate of candidates) {
+    for (const path of paths) {
+      try {
+        const value = path.reduce((current, key) => current?.[key], candidate);
+        if (value !== undefined && value !== null && String(value).trim()) return value;
+      } catch { /* keep looking through host-owned context objects */ }
+    }
+  }
+  return '';
+}
+
+function contextValues(candidates, paths) {
+  const values = [];
+  for (const candidate of candidates) {
+    for (const path of paths) {
+      try {
+        const value = path.reduce((current, key) => current?.[key], candidate);
+        if (value !== undefined && value !== null && String(value).trim()) values.push(value);
+      } catch { /* keep looking through host-owned context objects */ }
+    }
+  }
+  return values;
+}
+
+/**
+ * Normalize classic SharePoint, modern-page module-loader, and SPFx-style
+ * context shapes into the small surface the provider needs. Returns null when
+ * no trustworthy web URL can be recovered.
+ */
+export function resolveSharePointContext(value, { location = globalThis.location } = {}) {
+  const candidates = contextCandidates(value);
+  const absolute = contextValues(candidates, [
+    ['webAbsoluteUrl'], ['WebAbsoluteUrl'], ['web', 'absoluteUrl'], ['web', 'url'],
+  ]);
+  const relative = contextValues(candidates, [
+    ['webServerRelativeUrl'], ['WebServerRelativeUrl'], ['web', 'serverRelativeUrl'],
+  ]);
+  const locationBase = (() => {
+    try { return location?.href || location?.origin || ''; } catch { return ''; }
+  })();
+  const siteBases = contextValues(candidates, [
+    ['siteAbsoluteUrl'], ['SiteAbsoluteUrl'], ['site', 'absoluteUrl'],
+  ]);
+  const rawUrls = [...absolute, ...relative];
+  const bases = [...siteBases, locationBase].filter(Boolean);
+  let webAbsoluteUrl = '';
+  for (const rawUrl of rawUrls) {
+    const attempts = [null, ...bases];
+    for (const base of attempts) {
+      try {
+        const url = base ? new URL(String(rawUrl), String(base)) : new URL(String(rawUrl));
+        if (!/^https?:$/.test(url.protocol)) continue;
+        url.hash = '';
+        url.search = '';
+        webAbsoluteUrl = url.href.replace(/\/+$/, '');
+        break;
+      } catch { /* another candidate or base may still be valid */ }
+    }
+    if (webAbsoluteUrl) break;
+  }
+  if (!webAbsoluteUrl) return null;
+
+  return {
+    webAbsoluteUrl,
+    formDigestValue: firstContextValue(candidates, [
+      ['formDigestValue'], ['FormDigestValue'],
+    ]),
+    formDigestTimeoutSeconds: firstContextValue(candidates, [
+      ['formDigestTimeoutSeconds'], ['FormDigestTimeoutSeconds'],
+    ]),
+  };
+}
+
+function windowOrigin(source) {
+  try {
+    const origin = String(source?.location?.origin || '');
+    return origin && origin !== 'null' ? origin : '';
+  } catch { return ''; }
+}
+
+function sameOriginWindows(source) {
+  const windows = [source];
+  const seen = new Set(windows);
+  const origin = windowOrigin(source);
+  if (!origin) return windows;
+  for (const key of ['parent', 'top']) {
+    try {
+      const candidate = source?.[key];
+      if (!candidate || seen.has(candidate) || windowOrigin(candidate) !== origin) continue;
+      seen.add(candidate);
+      windows.push(candidate);
+    } catch { /* cross-origin WindowProxy access is expected and ignored */ }
+  }
+  return windows;
+}
+
+// Modern SharePoint pages may expose no `_spPageContextInfo`. DCSPad's tested
+// bridge recovers the legacy page context from the Site Pages feature bundle;
+// keep the same guarded lookup here so every Workbench consumer benefits.
+const MODERN_SITE_PAGES_FEATURE_ID = 'b6917cb1-93a0-4b97-a84d-7cf49975d4ec';
+
+function modernSitePagesContext(source) {
+  try {
+    return source?.spModuleLoader
+      ?._bundledComponents
+      ?.[MODERN_SITE_PAGES_FEATURE_ID]
+      ?.PageManager
+      ?._instance
+      ?.pageContext
+      ?.legacyPageContext
+      || null;
+  } catch { return null; }
+}
+
+/**
+ * Locate a page context from DCS adapters or SharePoint globals. Parent/top
+ * windows are inspected only after a same-origin check; hostile WindowProxy
+ * getters therefore degrade to no context instead of escaping an exception.
+ */
+export function findSharePointContext(source = globalThis) {
+  const keys = [
+    '__DCS_SP_CONTEXT__', '__DCSPAD_SP_CONTEXT__',
+    '_spPageContextInfo', 'moduleLoaderPageContext',
+  ];
+  for (const target of sameOriginWindows(source)) {
+    let location;
+    try { location = target.location; } catch { location = undefined; }
+    for (const key of keys) {
+      try {
+        const context = resolveSharePointContext(target[key], { location });
+        if (context) return context;
+      } catch { /* host globals are optional and may be guarded getters */ }
+    }
+    const modern = resolveSharePointContext(modernSitePagesContext(target), { location });
+    if (modern) return modern;
+  }
+  return null;
+}
+
 function readPageContext() {
-  const context = globalThis._spPageContextInfo
-    || globalThis._spPageContextInfo?.legacyPageContext
-    || globalThis.moduleLoaderPageContext?.legacyPageContext
-    || null;
-  if (!context?.webAbsoluteUrl) return null;
-  return context;
+  return findSharePointContext(globalThis);
+}
+
+/** A normal browser URL to a file, with every server-relative segment encoded. */
+export function directUrlForPath(webUrl, path) {
+  const origin = new URL(webUrl).origin;
+  const encodedPath = normalizePath(path).split('/')
+    // SharePoint returns decoded ServerRelativeUrl values. Encode each segment
+    // once and apply RFC 3986's stricter escaping for apostrophes and peers.
+    .map((segment) => encodeURIComponent(segment)
+      .replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`))
+    .join('/');
+  return `${origin}${encodedPath}`;
 }
 
 // ---- provider --------------------------------------------------------------
@@ -195,7 +363,7 @@ function readPageContext() {
 /**
  * @param {object} [options]
  * @param {Function} [options.fetchImpl]     injectable fetch (tests)
- * @param {Function} [options.getContext]    () => _spPageContextInfo-shaped object
+ * @param {Function} [options.getContext]    () => any supported page-context shape
  * @param {string}   [options.webUrl]        pin to one web instead of the page's
  * @param {boolean}  [options.allowSiteSwitch] show the "SharePoint site" locator (default true)
  * @param {number}   [options.pageSize]      $top for listings (default 5000)
@@ -216,6 +384,11 @@ export function sharePointProvider(options = {}) {
   const fieldsCache = new Map();
   let catalogPromise = null;
 
+  function pageContext() {
+    try { return resolveSharePointContext(getContext()); }
+    catch { return null; }
+  }
+
   // The catalog is resolved once and reused: a loader that fetches a config
   // file should not run again every time the dialog opens.
   function catalog() {
@@ -228,14 +401,27 @@ export function sharePointProvider(options = {}) {
   }
 
   function hostWebUrl() {
-    const pinned = options.webUrl || getContext()?.webAbsoluteUrl;
+    const context = pageContext();
+    const pinned = options.webUrl || context?.webAbsoluteUrl;
     if (!pinned) {
       throw new FileBrokerError(
         'SharePoint file transfer needs a live SharePoint page context.',
         { code: 'not-available' },
       );
     }
-    return String(pinned).replace(/\/+$/, '');
+    try {
+      const url = context?.webAbsoluteUrl
+        ? new URL(String(pinned), context.webAbsoluteUrl)
+        : new URL(String(pinned));
+      if (!/^https?:$/.test(url.protocol)) throw new Error('protocol');
+      url.hash = '';
+      url.search = '';
+      return url.href.replace(/\/+$/, '');
+    } catch {
+      throw new FileBrokerError('The configured SharePoint web URL is invalid.', {
+        code: 'invalid-location',
+      });
+    }
   }
 
   // Every candidate web is checked against the page's own origin — this
@@ -333,7 +519,7 @@ export function sharePointProvider(options = {}) {
     // The page digest is only a candidate for the web that served the page;
     // any other site always gets its own /contextinfo call.
     if (!force && !cached && webUrl === hostWebUrl()) {
-      const context = getContext();
+      const context = pageContext();
       const seconds = Number(context?.formDigestTimeoutSeconds) || 0;
       if (context?.formDigestValue && seconds > 0) {
         const page = {
@@ -490,7 +676,10 @@ export function sharePointProvider(options = {}) {
       locator: options.allowSiteSwitch !== false,
     },
 
-    isAvailable: () => Boolean(options.webUrl || getContext()?.webAbsoluteUrl),
+    isAvailable: () => {
+      try { hostWebUrl(); return true; }
+      catch { return false; }
+    },
 
     /** The configured catalog, for apps that want to render their own chooser. */
     sites: () => catalog(),
@@ -595,7 +784,7 @@ export function sharePointProvider(options = {}) {
           version: file.UIVersionLabel || '',
           mimeType: mimeForFileName(file.Name),
           category: categoryOf(file.Name),
-          url: `${new URL(webUrl).origin}${encodeURI(checkedPath(file.ServerRelativeUrl, rootPath))}`,
+          url: directUrlForPath(webUrl, checkedPath(file.ServerRelativeUrl, rootPath)),
           providerData: { webUrl },
         })),
       });
@@ -608,16 +797,24 @@ export function sharePointProvider(options = {}) {
         `${webUrl}/_api/web/GetFileByServerRelativePath(decodedUrl='${odataPathLiteral(path)}')/$value`,
       );
       await requireOk(response, 'Could not download the SharePoint file', 'read');
+      const headerSize = Number(response.headers.get('content-length')) || 0;
       const base = {
         name: baseName(path),
         path,
         mimeType: mimeForFileName(path),
-        size: Number(response.headers.get('content-length')) || 0,
+        size: headerSize || Number(entry.size) || 0,
       };
       if (as === 'none') return base;
-      if (as === 'blob') return { ...base, blob: await response.blob() };
-      if (as === 'arrayBuffer') return { ...base, data: await response.arrayBuffer() };
-      return { ...base, text: await response.text() };
+      if (as === 'blob') {
+        const blob = await response.blob();
+        return { ...base, size: headerSize || blob.size, blob };
+      }
+      if (as === 'arrayBuffer') {
+        const data = await response.arrayBuffer();
+        return { ...base, size: headerSize || data.byteLength, data };
+      }
+      const text = await response.text();
+      return { ...base, size: headerSize || new Blob([text]).size, text };
     },
 
     async write(location, name, data, { overwrite = false } = {}) {
@@ -635,7 +832,7 @@ export function sharePointProvider(options = {}) {
       return {
         name,
         path,
-        url: `${new URL(webUrl).origin}${encodeURI(path)}`,
+        url: directUrlForPath(webUrl, path),
         overwritten: Boolean(overwrite),
         providerData: { webUrl },
       };

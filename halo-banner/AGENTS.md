@@ -82,6 +82,18 @@ deliberately drifted rules, under host-page CSS that reuses the same class names
 touch `scopedComponentCss()`, open that file and confirm block 1 still renders bold text
 and a white ring.
 
+**9. The image workflow has two reviewed, static runtime dependencies.** The DCS File
+Broker must be deployed as an immutable browser-ESM `src/` tree, not as a lone
+`file-broker.js` and not from a mutable branch URL. Image optimization lazily loads the
+pinned `vendor/browser-image-compression-2.0.2.js` UMD asset and uses native Canvas as its
+fallback. Configure these with `window.HALO_IMAGE_PICKER_CONFIG` before the Halo runtime
+script; README lists the exact supported keys (`toolsBaseUrl`, `brokerVersion`,
+`brokerModuleUrl`, `siteCatalogUrl`, `compressionScriptUrl`, `defaultProvider`, and
+`sharePoint`). The local sibling broker path is the sanctioned development exception to
+this folder's normal isolation rule. If either dependency is unavailable, manual URL
+entry and existing outputs must keep working. Do not add an npm toolchain, public runtime
+CDN, upload service, server processor, or another unreviewed compressor dependency.
+
 ## Verifying an export change
 
 The exporter is verified by overlaying its output on the live preview with
