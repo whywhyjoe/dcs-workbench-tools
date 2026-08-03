@@ -407,6 +407,51 @@ test('sharepoint: blob reads derive byte size when Content-Length is absent', as
   assert.equal(result.blob.size, bytes.byteLength);
 });
 
+test('sharepoint: known oversized responses are rejected before buffering', async () => {
+  const webUrl = 'https://contoso.sharepoint.com/sites/Team';
+  let buffered = false;
+  const response = {
+    ok: true,
+    status: 200,
+    headers: new Headers({ 'Content-Length': '4096' }),
+    text: async () => { buffered = true; return 'too large'; },
+    blob: async () => { buffered = true; return new Blob(['too large']); },
+    arrayBuffer: async () => { buffered = true; return new ArrayBuffer(4096); },
+  };
+  const provider = sharePointProvider({ webUrl, fetchImpl: async () => response });
+
+  await assert.rejects(
+    () => provider.read({
+      name: 'large.bin',
+      path: '/sites/Team/Shared Documents/large.bin',
+      providerData: { webUrl },
+    }, { as: 'arrayBuffer', maxBytes: 1024 }),
+    (error) => error.code === 'too-large',
+  );
+  assert.equal(buffered, false, 'the response body was not consumed');
+});
+
+test('sharepoint: buffered reads report actual size when Content-Length is too low', async () => {
+  const webUrl = 'https://contoso.sharepoint.com/sites/Team';
+  const bytes = new Uint8Array(16);
+  const provider = sharePointProvider({
+    webUrl,
+    fetchImpl: async () => new Response(bytes, {
+      status: 200,
+      headers: { 'Content-Length': '4' },
+    }),
+  });
+
+  const result = await provider.read({
+    name: 'misreported.bin',
+    path: '/sites/Team/Shared Documents/misreported.bin',
+    providerData: { webUrl },
+  }, { as: 'arrayBuffer', maxBytes: 32 });
+
+  assert.equal(result.size, 16);
+  assert.equal(result.data.byteLength, 16);
+});
+
 test('file-broker entry point exports the standard dependency-free providers', () => {
   assert.equal(publicLocalProvider.name, 'localProvider');
   assert.equal(publicSharePointProvider, sharePointProvider);
@@ -485,6 +530,57 @@ test('broker: read enforces the byte ceiling', async () => {
   const broker = createFileBroker({ providers: [memoryProvider()], maxReadBytes: 8 });
   await assert.rejects(
     () => broker.read('memory', { name: 'readme.md', path: '/sites/Demo/Shared Documents/readme.md', size: 4096 }),
+    (error) => error.code === 'too-large',
+  );
+});
+
+test('broker: read passes the effective byte ceiling to providers', async () => {
+  let options;
+  const reader = defineProvider({
+    id: 'reader',
+    capabilities: { browse: true, read: true },
+    list: async () => ({ path: '/root', rootPath: '/root', entries: [] }),
+    read: async (_entry, readOptions) => {
+      options = readOptions;
+      return { text: 'ok', size: 2 };
+    },
+  });
+  const broker = createFileBroker({ providers: [reader], maxReadBytes: 2048 });
+
+  await broker.read('reader', { name: 'small.txt', path: '/root/small.txt' }, {
+    as: 'text',
+    maxBytes: 1024,
+  });
+  assert.deepEqual(options, { as: 'text', maxBytes: 1024 });
+});
+
+test('broker: read retains its post-read ceiling for unknown or incorrect sizes', async () => {
+  const reader = defineProvider({
+    id: 'reader',
+    capabilities: { browse: true, read: true },
+    list: async () => ({ path: '/root', rootPath: '/root', entries: [] }),
+    read: async () => ({ data: new Uint8Array(16), size: 16 }),
+  });
+  const broker = createFileBroker({ providers: [reader] });
+
+  await assert.rejects(
+    () => broker.read('reader', {
+      name: 'misreported.bin', path: '/root/misreported.bin', size: 0,
+    }, { as: 'arrayBuffer', maxBytes: 8 }),
+    (error) => error.code === 'too-large',
+  );
+
+  const dishonestReader = defineProvider({
+    id: 'dishonest-reader',
+    capabilities: { browse: true, read: true },
+    list: async () => ({ path: '/root', rootPath: '/root', entries: [] }),
+    read: async () => ({ data: new Uint8Array(16), size: 4 }),
+  });
+  const defensiveBroker = createFileBroker({ providers: [dishonestReader] });
+  await assert.rejects(
+    () => defensiveBroker.read('dishonest-reader', {
+      name: 'dishonest.bin', path: '/root/dishonest.bin', size: 0,
+    }, { as: 'arrayBuffer', maxBytes: 8 }),
     (error) => error.code === 'too-large',
   );
 });

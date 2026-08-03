@@ -39,6 +39,10 @@ document libraries, including library metadata. The folder is named
 6. **Cancelling resolves `null`.** It is never an exception.
 7. **Unavailable metadata columns are shown and explained**, never hidden, and
    never block the transfer.
+8. **Read ceilings are enforced at both available layers.** `broker.read()`
+   passes the effective `maxBytes` to providers and always retains its post-read
+   check. Providers may reject known-large bodies early, but must not be trusted
+   as the only enforcement point.
 
 ## File map
 
@@ -60,7 +64,7 @@ src/providers/sharepoint.js  /_api client: digest cache, listing, transfer,
                           ValidateUpdateListItem, site locator
 src/providers/memory.js   in-memory library for the demo and the tests
 demo/index.html + demo.js ten working examples + a theme switch, no network
-test/broker.test.mjs      41 headless tests
+test/broker.test.mjs      45 headless tests
 ```
 
 Design system: `C:\dev\repos\dcs-workbench-design-system` (tokens, the
@@ -106,3 +110,7 @@ Live SharePoint behaviour can only be verified in a tenant.
   string and the module dies with a syntax error that names a CSS keyword
   ("Unexpected identifier 'display'"). Use quotes in comments there, and run
   the tests after editing `styles.js` — they import it, so they catch it.
+- **Listing rendering is incremental and cancellable.** Browsable entries are
+  appended in 200-row animation-frame batches. Any navigation, provider-mode
+  switch, close, or failure must invalidate the previous render token so stale
+  rows cannot appear in the new location. Every entry must remain reachable.

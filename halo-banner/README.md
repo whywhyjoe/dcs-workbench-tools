@@ -207,6 +207,9 @@ single transparency-preserving resize/re-encode, so a best-effort result may rem
   picker disable when an incompatible dependency is encountered.
 - Added tenant-generic defaults for the versioned broker, favorite-sites catalog, and
   pinned compressor, while retaining explicit configuration overrides.
+- Isolated the classic runtime, made initialization idempotent per generator root, cached
+  scoped component CSS, and stopped rebuilding hidden emitted markup on every preview
+  change. Copy and Show code flush the current state before acting.
 - Preserved the banner component geometry, emitted component CSS, manual URL workflow,
   and existing HTML/SVG output semantics.
 
@@ -227,14 +230,11 @@ single transparency-preserving resize/re-encode, so a best-effort result may rem
   image rendering, CSP/MIME delivery, and special filenames through real REST responses.
 - Halo has no automated DOM/browser regression suite. The completed feature was checked
   locally in desktop and 520px layouts, but these flows remain manual.
-- `initGenerator()` is not idempotent. If more than one runtime copy resolves on the same
-  page, controls can be bound twice. Current deployment depends on only one script copy
-  resolving in each environment.
-- `scopedComponentCss()` and emitted markup are regenerated on every render. This is
-  known performance debt during rapid slider movement, though it was not a blocker in
-  local smoke testing.
 - Dax Pro remains external and is not embedded in generated SVG files; font substitution
   can shift glyphs relative to the measured line breaks.
+
+The disposition of the latest review, including deliberately deferred security work, is
+recorded in [`../code-review-process.md`](../code-review-process.md).
 
 ## Editing styles
 

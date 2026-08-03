@@ -790,14 +790,23 @@ export function sharePointProvider(options = {}) {
       });
     },
 
-    async read(entry, { as = 'text' } = {}) {
+    async read(entry, { as = 'text', maxBytes } = {}) {
       const { webUrl, rootPath } = webOf(entry.providerData ? { webUrl: entry.providerData.webUrl } : {});
       const path = checkedPath(entry.path, rootPath);
       const response = await request(
         `${webUrl}/_api/web/GetFileByServerRelativePath(decodedUrl='${odataPathLiteral(path)}')/$value`,
       );
       await requireOk(response, 'Could not download the SharePoint file', 'read');
-      const headerSize = Number(response.headers.get('content-length')) || 0;
+      const reportedSize = Number(response.headers.get('content-length'));
+      const headerSize = Number.isFinite(reportedSize) && reportedSize > 0 ? reportedSize : 0;
+      const ceiling = Number(maxBytes);
+      if (headerSize && Number.isFinite(ceiling) && ceiling > 0 && headerSize > ceiling) {
+        try { await response.body?.cancel(); } catch { /* rejection still prevents buffering */ }
+        throw new FileBrokerError(
+          `"${baseName(path)}" is larger than the ${Math.round(ceiling / 1048576)} MB read limit.`,
+          { code: 'too-large' },
+        );
+      }
       const base = {
         name: baseName(path),
         path,
@@ -807,14 +816,14 @@ export function sharePointProvider(options = {}) {
       if (as === 'none') return base;
       if (as === 'blob') {
         const blob = await response.blob();
-        return { ...base, size: headerSize || blob.size, blob };
+        return { ...base, size: blob.size, blob };
       }
       if (as === 'arrayBuffer') {
         const data = await response.arrayBuffer();
-        return { ...base, size: headerSize || data.byteLength, data };
+        return { ...base, size: data.byteLength, data };
       }
       const text = await response.text();
-      return { ...base, size: headerSize || new Blob([text]).size, text };
+      return { ...base, size: new Blob([text]).size, text };
     },
 
     async write(location, name, data, { overwrite = false } = {}) {

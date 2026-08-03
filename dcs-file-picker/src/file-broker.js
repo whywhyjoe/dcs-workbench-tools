@@ -125,8 +125,14 @@ export function createFileBroker(config = {}) {
         { code: 'too-large' },
       );
     }
-    const result = await target.read(entry, { as });
-    const size = result.size ?? byteLength(result.data ?? result.blob ?? result.text);
+    // Providers that can inspect response metadata may reject a known-large
+    // body before buffering it. Older providers ignore the extra option.
+    const result = await target.read(entry, { as, maxBytes: ceiling });
+    // Once bytes have been buffered, measure the payload instead of trusting
+    // provider metadata. This keeps the final guard effective when a response
+    // advertises an inaccurate low size.
+    const payload = result.data ?? result.blob ?? result.text;
+    const size = payload == null ? (result.size ?? 0) : byteLength(payload);
     if (size > ceiling) {
       throw new FileBrokerError(
         `"${entry.name}" is larger than the ${Math.round(ceiling / 1048576)} MB read limit.`,

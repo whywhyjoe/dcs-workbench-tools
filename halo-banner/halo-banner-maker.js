@@ -1,3 +1,6 @@
+(() => {
+'use strict';
+
 /**
  * Utility: waitForElement
  * Waits for a standard (non-jQuery) selector to match one or more elements in the DOM.
@@ -27,11 +30,16 @@ function waitForElement(selector, callback, timeout = 10000, interval = 100) {
 	check();
 }
 
-/* Capture the runtime URL for local static fallbacks. SharePoint deployments
-   derive their shared tools base from page context unless explicitly set. */
-waitForElement.haloScriptUrl ||= document.currentScript?.src || document.baseURI;
+/* Capture this while the classic script is executing; document.currentScript is
+   null by the time the polling callback runs. SharePoint deployments derive
+   their shared tools base from page context unless explicitly set. */
+const HALO_SCRIPT_URL = document.currentScript?.src || document.baseURI;
+const INIT_STATE_ATTRIBUTE = 'data-halo-runtime-state';
 
 function initGenerator(root) {
+if (!root || root.hasAttribute(INIT_STATE_ATTRIBUTE)) return;
+root.setAttribute(INIT_STATE_ATTRIBUTE, 'initializing');
+try {
 /* ############################################################
   DEFAULTS — edit these, reload, experiment. Everything the
   panel controls starts from here.
@@ -112,7 +120,7 @@ let brokerPromise = null;
 let compressorPromise = null;
 let brokerFailure = '';
 
-function configuredUrl(value, fallback, base = waitForElement.haloScriptUrl) {
+function configuredUrl(value, fallback, base = HALO_SCRIPT_URL) {
  try { return new URL(String(value || fallback), base).href; }
  catch { return String(value || fallback); }
 }
@@ -879,6 +887,8 @@ function commentSafe(value) {
   twice must stay valid HTML. */
 const SCOPE_ID = String(Math.floor(100000 + Math.random() * 900000));
 const SCOPE_CLASS = `halo-${SCOPE_ID}`;
+let cachedComponentCss = null;
+let outputDirty = true;
 /* Rewrites the component stylesheet so every selector only matches inside
   this block's wrapper. Going through the CSSOM (rather than string surgery)
   keeps @media intact and drops all comments for free. */
@@ -895,6 +905,10 @@ function scopedComponentCss(scope) {
   return `${indent}${rule.cssText}`;   // @font-face and friends stay global
  };
  return [...sheet.cssRules].map(rule => render(rule)).join('\n');
+}
+function emittedComponentCss() {
+ if (cachedComponentCss === null) cachedComponentCss = scopedComponentCss(SCOPE_CLASS);
+ return cachedComponentCss;
 }
 function render() {
  const s = scene.style;
@@ -952,7 +966,15 @@ function render() {
  lbl('v-tsize', state.size); lbl('v-tx', state.textX); lbl('v-ty', state.textY);
  lbl('v-tw', state.textW || 'auto'); lbl('v-th', state.textH || 'auto');
  lbl('v-tpadx', state.padX); lbl('v-tpady', state.padY);
- emit();
+ outputDirty = true;
+ if (!$('code-view').hidden) flushOutput();
+}
+function flushOutput() {
+ if (outputDirty) {
+  emit();
+  outputDirty = false;
+ }
+ return out.textContent;
 }
 function emit() {
  const hasLink = state.href.trim() !== '';
@@ -983,7 +1005,7 @@ function emit() {
 `<!-- HALO BANNER '${commentSafe(state.photoAlt)}' ${SCOPE_ID} -->
 <div class="${SCOPE_CLASS}">
 <style>
-${scopedComponentCss(SCOPE_CLASS)}
+${emittedComponentCss()}
 </style>
 <${wrapperTag} class="halo-banner-link${hasLink ? ' has-link' : ''}"${hasLink ? ` href="${escapeAttribute(state.href)}"${state.target === '_blank' ? ' target="_blank" rel="noopener"' : ''}` : ''}>
 <div class="halo-banner" style="
@@ -1259,7 +1281,7 @@ $('trad').addEventListener('change', event => { state.rounded = event.target.che
 $('copy').addEventListener('click', event => {
  const button = event.currentTarget;
  serializedAction('copy', async () => {
-  await navigator.clipboard.writeText(out.textContent);
+  await navigator.clipboard.writeText(flushOutput());
   buttonLabel(button, 'Copied');
   setTimeout(() => buttonLabel(button, 'Copy'), 1200);
  });
@@ -1296,7 +1318,7 @@ $('toggle-code').addEventListener('click', event => {
   button.setAttribute('aria-expanded', String(!showing));
  };
  if (showing) toggle();
- else serializedAction('show-code', toggle);
+ else serializedAction('show-code', () => { flushOutput(); toggle(); });
 });
 const stageInner = root.querySelector('.halo-stage-inner');
 const stageResizer = $('stage-resizer');
@@ -1339,8 +1361,14 @@ stageResizer.addEventListener('keydown', event => {
 link.addEventListener('click', e => e.preventDefault());
 render();
 updateImageStatus();
+root.setAttribute(INIT_STATE_ATTRIBUTE, 'ready');
+} catch (error) {
+ root.removeAttribute(INIT_STATE_ATTRIBUTE);
+ throw error;
+}
 }
 
 waitForElement('[data-halo-generator] img.halo__img', image => {
 	initGenerator(image.closest('[data-halo-generator]'));
 });
+})();

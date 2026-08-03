@@ -14,8 +14,9 @@ absence must leave the core tool usable.
 
 ## Layout of the code
 
-`halo-banner-maker.js` is one closure, `initGenerator(root)`, started by a `waitForElement`
-poll. Its major areas, in source order, are:
+`halo-banner-maker.js` is a private classic-script IIFE containing one per-root closure,
+`initGenerator(root)`, started by a `waitForElement` poll. Its major areas, in source
+order, are:
 
 | Area | What |
 |---|---|
@@ -25,9 +26,11 @@ poll. Its major areas, in source order, are:
 | Standalone SVG | image fetch/Blob reuse, text measurement, geometry duplication, and download |
 | Bindings | sliders, selects, text inputs, pick buttons, Copy, Show code, SVG, and resize rail |
 
-`render()` is the single path from state to screen; every control calls it and it calls
-`emit()` at the end. Add new controls by binding them to `state` and letting `render()` do
-the rest — do not touch the DOM from an event handler.
+`render()` is the single path from state to the preview; every control calls it. It marks
+the emitted output dirty and refreshes it immediately only while the code panel is visible.
+Copy and Show code must call `flushOutput()` after their image guard so they always act on
+the latest state. Add new controls by binding them to `state` and letting `render()` do the
+rest — do not update preview DOM directly from an event handler.
 
 ## Hard invariants
 
@@ -152,10 +155,10 @@ a real HTTP server.
 **The deployed JS has a different filename** — `halo-banner-generator.js` on SharePoint
 versus `halo-banner-maker.js` here — and its own `?c=` cache-buster that must be bumped.
 
-**`initGenerator` is not idempotent.** It binds listeners unconditionally, so running it
-twice double-binds everything. The page references both a local and a SharePoint copy of
-the script; only one resolves in any given environment today, but do not add a third entry
-point.
+**Initialization is guarded on the generator root.** The runtime records `initializing`
+before it binds listeners and `ready` after the first render. A second local/deployed
+runtime evaluation must leave that root alone. If synchronous initialization throws, the
+guard is removed so a corrected runtime can retry; preserve that rollback behavior.
 
 **Blend modes need an isolation context.** The component sets `isolation: isolate` on
 `.halo-banner`; the SVG mirrors it with `style="isolation:isolate"` on the root group.

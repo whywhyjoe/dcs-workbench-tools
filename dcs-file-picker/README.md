@@ -123,13 +123,17 @@ without depending on a particular consumer.
 - Hardened direct browsing URL construction by encoding each path segment and returning
   normal file URLs instead of SharePoint sharing links.
 - Made SharePoint Blob reads derive their actual byte size when `Content-Length` is absent.
+- Passed the effective read ceiling to providers so SharePoint can reject a known-large
+  `Content-Length` before buffering, while retaining the broker's post-read enforcement.
+- Rendered large browsable listings in cancellable 200-row animation-frame batches so the
+  dialog stays responsive without dropping or hiding entries.
 - Added generic `file.webUrl` and `file.providerData` result location metadata so a consumer
   can reopen a save dialog in the selected source site/folder.
 - Added optional favorite-site JSON loading with graceful empty-catalog fallback and a
   canonical example configuration.
 - Added immutable distribution guidance for the complete ES-module tree and a separately
   managed catalog.
-- Expanded the headless suite to 41 passing contract and regression tests.
+- Expanded the headless suite to 45 passing contract and regression tests.
 
 ## Deliberately not done
 
@@ -151,12 +155,16 @@ without depending on a particular consumer.
   covered by regression tests.
 - The dialog has no automated DOM test suite. Its demo flows and accessibility behavior are
   still checked manually.
-- Large listings are appended row-by-row. A `DocumentFragment` or virtualization should be
-  considered if real libraries make rendering visibly expensive.
-- When both entry size and `Content-Length` are unavailable or wrong, a response may be fully
-  read before the broker can enforce the post-read byte ceiling.
+- Batched listing rendering still creates every row eventually; profile real very-large
+  libraries before taking on the added complexity of virtualization.
+- When both entry size and `Content-Length` are unavailable or dishonest, a response may
+  still be fully read before the broker's post-read ceiling rejects it. Strict prevention
+  would require bounded stream consumption in providers that support it.
 - Chunked uploads above 50 MB, User/Lookup/Taxonomy editors, an asynchronous recall store,
   and additional providers remain extension work rather than v1 features.
+
+The disposition of the latest review, including deliberately deferred security work, is
+recorded in [`../code-review-process.md`](../code-review-process.md).
 
 ---
 
@@ -174,7 +182,7 @@ error.
 | `metadata` | broker default | `false` to skip, or a schema override |
 | `editMetadata` | `false` | let the person edit and save columns while opening |
 | `providers` | all | subset of provider ids to offer |
-| `maxReadBytes` | 25 MB | ceiling enforced before and after the read |
+| `maxReadBytes` | 25 MB | ceiling passed to the provider for early rejection and enforced again after the read |
 | `title`, `description` | — | dialog copy |
 
 ```js

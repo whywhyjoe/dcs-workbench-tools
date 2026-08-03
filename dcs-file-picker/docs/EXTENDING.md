@@ -129,7 +129,12 @@ export function graphProvider({ token } = {}) {
       });
     },
 
-    async read(entry, { as }) { /* → { name, path, text | data | blob, size } */ },
+    async read(entry, { as, maxBytes }) {
+      /* `maxBytes` is the broker's effective ceiling. Reject a known-large
+         response before buffering when the storage API exposes its size. The
+         broker still performs the final post-read check. */
+      /* → { name, path, text | data | blob, size } */
+    },
 
     async write(location, name, data, { overwrite }) {
       /* → { name, path, url, overwritten } */

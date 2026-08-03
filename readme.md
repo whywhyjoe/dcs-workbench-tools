@@ -82,9 +82,15 @@ The image-picker feature added in August 2026 includes:
 The detailed implementation record is under
 [`.workflow/ultracode/halo-image-picker/`](.workflow/ultracode/halo-image-picker/final-report.md).
 
+A later reliability/performance review made Halo initialization idempotent,
+removed repeated hidden-output serialization, rejected known-oversized
+SharePoint reads before buffering, and made large broker listings render in
+responsive batches. The decisions, deferrals, and verification evidence are in
+[`code-review-process.md`](code-review-process.md).
+
 ## Verification completed
 
-- `node --test dcs-file-picker/test/broker.test.mjs`: 41 tests passed.
+- `node --test dcs-file-picker/test/broker.test.mjs`: 45 tests passed.
 - `node --check` passed for the Halo runtime and pinned compressor.
 - Halo's generated inline CSS was refreshed and `git diff --check` passed.
 - Local browser smoke testing covered graceful broker fallback, local-file
@@ -115,13 +121,7 @@ The detailed implementation record is under
 3. **Add automated DOM/browser coverage.** The broker dialog and Halo flows
    currently rely on manual browser smoke testing; only the broker's headless
    contracts are automated.
-4. **Address known performance debt if it becomes observable.** The broker
-   appends large listings row-by-row, while Halo regenerates scoped component
-   CSS and emitted markup during high-frequency rendering.
-5. **Make Halo initialization idempotent.** Re-evaluating its runtime can bind
-   controls twice. Current deployment assumes exactly one local or hosted
-   runtime resolves.
-6. **Complete optional product work only when required.** Dax Pro embedding,
+4. **Complete optional product work only when required.** Dax Pro embedding,
    broker chunked uploads above 50 MB, User/Lookup/Taxonomy metadata controls,
    and asynchronous shared recall storage remain intentionally unimplemented.
 
