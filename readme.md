@@ -5,12 +5,18 @@ DCS Workbench family of SharePoint applications. The projects are intentionally
 static: they use browser JavaScript, HTML, and CSS without a package manager,
 application server, or mandatory build step.
 
+> **Building a new DCS Workbench app? Start at [`docs/`](docs/README.md)** — the
+> construction method for the whole family: hosting and boot, composition,
+> SharePoint data access, the File Broker, design systems, and a new-app recipe.
+
 The current repository has two cooperating projects:
 
 | Folder | Role |
 | --- | --- |
 | [`halo-banner/`](halo-banner/README.md) | A visual editor that generates scoped Halo banner HTML/CSS or a standalone SVG for SharePoint pages. |
 | [`dcs-file-picker/`](dcs-file-picker/README.md) | The reusable **DCS File Broker**: a provider-based open/save dialog for local files and same-tenant SharePoint document libraries. |
+
+plus [`docs/`](docs/README.md), the cross-repo method documentation.
 
 The folder name `dcs-file-picker` is historical. Its public component is the
 **DCS File Broker**, because it opens, reads, writes, uploads, downloads, and
