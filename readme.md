@@ -16,7 +16,12 @@ The current repository has two cooperating projects:
 | [`halo-banner/`](halo-banner/README.md) | A visual editor that generates scoped Halo banner HTML/CSS or a standalone SVG for SharePoint pages. |
 | [`dcs-file-picker/`](dcs-file-picker/README.md) | The reusable **DCS File Broker**: a provider-based open/save dialog for local files and same-tenant SharePoint document libraries. |
 
-plus [`docs/`](docs/README.md), the cross-repo method documentation.
+plus the two shared, non-application artifacts:
+
+| Folder | Role |
+| --- | --- |
+| [`docs/`](docs/README.md) | The construction method for the whole DCS Workbench app family. |
+| [`design-system/`](design-system/README.md) | The **DCS Workbench design system** — the visual language for internal developer tooling (L1 workbench / L2 instrument layers). |
 
 The folder name `dcs-file-picker` is historical. Its public component is the
 **DCS File Broker**, because it opens, reads, writes, uploads, downloads, and

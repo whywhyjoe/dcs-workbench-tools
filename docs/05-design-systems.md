@@ -5,7 +5,7 @@ applies is decided by audience, not taste.
 
 | System | For | Register | Where |
 | --- | --- | --- | --- |
-| **DCS Workbench** | internal developer tooling | dark only, dense, one accent | its own repo; a vendored copy ships as `halo-banner/dcs-workbench.css` |
+| **DCS Workbench** | internal developer tooling | dark only, dense, one accent | [`../design-system/`](../design-system/README.md) in this repo |
 | **BSP / BMO** | employee-facing pages and apps | light, branded, warm editorial mode available | `bsp-design-system` repo |
 
 Everything in this doc set — DCSPad, the SP Workbench, Halo, the File Broker —
@@ -71,10 +71,17 @@ icon tiers · `--radius-s/m/l` · `--mono`/`--sans` · `--ease` and
 
 ### Where the source lives
 
-The canonical repository is separate from the app repos and **is not present in
-this workspace**; `halo-banner/dcs-workbench.css` is a vendored snapshot of it.
-Treat that file as reference, not as the source of truth — ask for the repo
-before making system-level changes.
+[`design-system/dcs-workbench.css`](../design-system/) in this repo is the
+canonical copy. Read that folder's README before making system-level changes —
+it records the provenance (no standalone repo could be found, so the vendored
+Halo snapshot was promoted), the measured drift between the three copies that
+existed, and the open items.
+
+Halo continues to vendor its own copy, because an L2 tool must survive being
+pasted whole and `halo-banner/AGENTS.md` forbids cross-folder dependencies. The
+difference now is that the vendored copy has a named upstream to re-sync from.
+DCSPad's `styles/app.css` predates the system and shares 85 of its ~104 tokens;
+converging it is a tracked backlog item, not something to do piecemeal.
 
 ---
 
