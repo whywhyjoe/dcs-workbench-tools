@@ -67,11 +67,11 @@ demo/index.html + demo.js ten working examples + a theme switch, no network
 test/broker.test.mjs      45 headless tests
 ```
 
-Design system: [`../design-system/`](../design-system/README.md) in this repo
-(tokens + the `.dcs-*` component sheet). The `dcs` theme in `styles.js`
-transcribes its values; if a token changes there, change the fallback here.
-(It previously pointed at a standalone `dcs-workbench-design-system` repo that
-could not be found — see that folder's README for the provenance.)
+Design system: the `whywhyjoe/dcs-workbench-design-system` repo — tokens in
+`tokens/*.css`, the `.dcs-*` component sheet, and the embedding rules in its
+`readme.md`. ([`../design-system/README.md`](../design-system/README.md) covers
+how to consume it.) The `dcs` theme in `styles.js` transcribes its values; if a
+token changes there, change the fallback here.
 
 ## Working on it
 

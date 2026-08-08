@@ -1,119 +1,107 @@
-# DCS Workbench design system
+# DCS Workbench design system — where it lives
 
-The visual language for **internal developer tooling** in the DCS Workbench
-family — DCSPad, the SP Workbench, Halo, the File Broker. Dark only, dense, one
-accent. Dependency-free and copy-safe: no build, no CDN, no icon package, no
-`@import`.
+**The design system is its own repository: [`whywhyjoe/dcs-workbench-design-system`](https://github.com/whywhyjoe/dcs-workbench-design-system).**
 
-**This is not the design system for employee-facing pages.** That is BSP/BMO, in
-the `bsp-design-system` repo. Picking between them is covered in
-[`../docs/05-design-systems.md`](../docs/05-design-systems.md).
+This folder is a pointer, deliberately. It holds **no CSS** — a copy here would
+be a fourth version of a file that already exists in three places, which is
+exactly the problem the upstream repo solves.
 
-## Files
+## What's upstream
 
-| File | What |
+It is a full system, not a stylesheet:
+
+```
+styles.css              the entry point — an @import list only; link this one file
+tokens/                 colors · typography · fonts · spacing · motion · elevation
+base.css                L1 takeover pages, specimen cards, templates  (L1 ONLY)
+dcs-workbench.css       the component sheet
+dcs-additions.css       intentional additions on top of the source sheet
+components/             controls · data · feedback · forms · identity ·
+                        navigation · overlay · shell
+guidelines/             22 specimen pages — colour, type, space, motion, icons
+templates/              dcspad · sp-workbench · compact-tool
+assets/                 brand marks, product icons, CascadiaCode.ttf,
+                        and dcs-workbench.standalone.css (the paste-inline build)
+SKILL.md                a user-invocable Claude skill: `dcs-workbench-design`
+readme.md               the authoritative guide — six rules, the two layers,
+                        visual foundations, iconography, embedding, do/don't
+```
+
+**There is a skill.** `SKILL.md` declares `dcs-workbench-design` as
+user-invocable. If you are designing a DCS Workbench interface — production or
+throwaway mock — invoke it rather than working from a token list.
+
+## How to consume it
+
+| You are building | Link |
 | --- | --- |
-| `dcs-workbench.css` | the whole system: `:root` tokens, L1 shell, L2 shell, controls, navigation, data display, feedback, motion |
+| an L1 workbench (takeover page) | `styles.css` — everything, `base.css` included |
+| an L2 instrument (inside one web part) | `tokens/*.css` + `dcs-workbench.css` (+ `dcs-additions.css`) — **skip `base.css`** |
+| a single-file tool pasted whole into a web part | `assets/dcs-workbench.standalone.css`, inlined |
 
-Drop it in whole, or paste the `:root` block plus the components you actually
-use — it is written to survive both.
+Two embedding rules that are easy to get wrong and expensive to debug:
 
-## The two layers
+- **L2 must never set `html`, `body`, or bare element selectors.** The host page
+  owns those. A stray `body { overflow: hidden }` makes the whole SharePoint
+  page unscrollable — the same failure documented from the L1 side in
+  [`../docs/01-hosting-and-boot.md`](../docs/01-hosting-and-boot.md).
+- **L2 declares tokens on the tool root, not `:root`** — `.dcs-tool { --accent: … }`.
+  That is also what lets two tools coexist on one page.
+- **L1 must always ship a suspend path.** When the host page enters edit mode,
+  hide the tool and revert the global `html`/`body` overrides, or the editor
+  canvas goes dark and unscrollable.
 
-- **L1 · Workbench** (`.dcs-app`) — full-screen takeover under the SharePoint
-  suite bar. Topbar (40px) · work · status bar (24px) in a CSS grid. Panels,
-  splitters, nav rail, data grid, tree, node rows. Carries the
-  `html.dcs-hosted` pinning rules that keep a hosted app over the viewport.
-- **L2 · Instrument** (`.dcs-tool`) — a single-purpose tool inside one web part,
-  in normal document flow. Head, controls column, canvas. No takeover, no status
-  bar, no splitters. Paints its own dark ground so it reads as an instrument
-  dropped onto the page, not as a themed page.
+**The drift contract:** tools built with this system will be copied, inlined,
+and edited in place — that is expected and fine. The only requirement is **keep
+the token names**. A copy whose `--accent` drifted to a slightly different teal
+still reads as family; a copy that renamed it to `--brand-green` can never be
+swept back in.
 
-These correspond exactly to the app tiers in
-[`../docs/00-system-model.md`](../docs/00-system-model.md). The layer you use is
-decided by the tier of the app, not by preference.
+## Reconciliation record — 2026-08-08
 
-## Rules
+An earlier revision of this folder promoted `halo-banner/dcs-workbench.css` to
+canonical, on the belief that no standalone repository existed, and recorded a
+"drift backlog" of tokens DCSPad had that the system lacked. **Both conclusions
+were wrong.** Measured against the actual repo:
 
-1. **One accent, one solid fill per screen.** `.dcs-btn-primary` is the verb
-   that runs the tool; additive actions use `.dcs-btn-soft`.
-2. **Signal colors are status, never decoration.**
-3. **Named durations only** — `--dur-tint` (hover/color), `--dur-move` (chrome),
-   `--dur-beat` (a result arriving). Tools do not invent durations.
-4. **The bare node-icon name is the resting state.** Brightness (`-active`,
-   `.is-called-out`) is rationed: the folder you are inside, the selected row, a
-   filter match. If everything is active, nothing is.
-5. **No hex literals in tool chrome.** Document any exemption where it lives,
-   with a reason.
-6. **Compose from existing classes and modifiers.** Do not invent component
-   classes; do not inline a value a token already covers.
-7. **A consumer that vendors this file treats it as read-only** and puts every
-   deviation in a sibling overrides file, commented.
-8. **A component embedded in a host app reads the host's tokens and never
-   declares them.** Keep the token *names* even when values travel inline —
-   `var(--bg-1, #1a1d23)` fallbacks are for standalone use only.
+| Comparison | Result |
+| --- | --- |
+| Repo tokens vs Halo's vendored file | **180 vs 103 — a strict superset.** Zero vendored tokens are missing upstream. |
+| Repo tokens vs `sp-dcspad/styles/app.css` | **All 104 pad tokens are present upstream.** There are no orphans. |
+| Repo classes vs vendored | **140 of 140 shared**, plus 10 upstream-only (`.dcs-work*`, `.dcs-mark*`, `.dcs-kbd-inline`, `.dcs-liga*`). |
+| Token *values* | Identical on every shared token but one. |
+| `assets/dcs-workbench.standalone.css` vs Halo's vendored file | **Byte-identical.** |
 
-## Consumers, and the drift this folder exists to stop
+So nothing forked. Halo is not carrying a divergent copy — it is carrying the
+repo's own intended paste-inline build. The apparent "drift backlog" was an
+artifact of comparing DCSPad against that single-file subset instead of against
+the real system, which had already absorbed DCSPad's additions (`--ft-sp-*`,
+`--accent-soft-hover`, `--radius-pill`, `--logo-dim`, the `--t-*` type roles,
+and the JS-set layout variables).
 
-Before this folder existed there was no canonical copy, and the token set had
-already diverged three ways:
+**The one genuine discrepancy:**
 
-| Consumer | How it consumes | State when this folder was created |
+| Token | Standalone / Halo | Repo `tokens/typography.css` |
 | --- | --- | --- |
-| `halo-banner/dcs-workbench.css` | vendored file, inlined into the payload by `inline-css.py` | the snapshot this folder was seeded from |
-| `sp-dcspad` `styles/app.css` | its own `:root`, predating the system | 104 tokens · **85 shared** · 18 system-only · 19 pad-only |
-| `dcs-file-picker` `src/styles.js` | the `dcs` theme transcribes ~12 token *fallback values* into template-literal strings | comment points at a `dcs-workbench-design-system/tokens/*.css` path that no longer resolves |
+| `--sans` | `"Segoe UI", system-ui, sans-serif` | `"Segoe UI", sans-serif` |
 
-Reading the difference:
-
-- **18 system-only tokens** are the `--node-*-active*` pair set — the two-tier
-  node-icon addition. DCSPad predates it.
-- **19 pad-only tokens** split three ways: six are JS-set layout variables
-  (`--sidebar-w`, `--diag-h`, `--editors-w`, `--preview-h`, `--runtime-w`,
-  `--diag-fs`) which are correctly *not* design tokens; five are transition and
-  scan aliases (`--t-*`, `--dur-scan`); and the remaining eight are genuine
-  tokens DCSPad added and the system never absorbed — `--ft-sp-*` (the
-  SharePoint file badge triple), `--accent-soft-fg-hi`, `--accent-soft-hover`,
-  `--info-fg`, `--logo-dim`, `--radius-pill`.
-
-**That last group is the actual backlog**: decide which belong in the system,
-add them here, and let DCSPad's `:root` shrink toward this file. Do not do it
-piecemeal from inside DCSPad — that is how the drift happened.
-
-## Provenance — read before making system-level changes
-
-`dcs-workbench.css` here is a **byte-identical copy of
-`halo-banner/dcs-workbench.css` at commit `07a46f6`**, promoted to canonical
-because no standalone design-system repository could be found.
-
-`dcs-file-picker/CLAUDE.md` previously referenced a repo at
-`C:\dev\repos\dcs-workbench-design-system` described as holding "tokens, the
-`.dcs-*` component sheet, and the embedding rules". The vendored snapshot covers
-the tokens and the component sheet. **If that repository does turn up, it may
-hold embedding rules and docs this file does not** — reconcile before treating
-this folder as complete:
-
-- [ ] diff its stylesheet against `dcs-workbench.css` here; this copy wins only
-      where it is genuinely newer
-- [ ] import any embedding rules / docs it has that are missing here
-- [ ] fold in the eight pad-only tokens listed above, or record why not
-- [ ] retire the old repo so there is exactly one home again
+The repo dropped `system-ui`. Harmless on Windows, a visible fallback change
+anywhere else. Worth deciding once and making consistent.
 
 ## Open items
 
-- **No version stamp.** The header says `v1.0` and nothing enforces it. The BSP
-  repo's pattern is worth copying: a `VERSION` file as the source of truth, a
-  script that stamps it into each shipped file's banner and into a
-  `--ds-version` custom property, and a deploy that refuses a dirty tree or a
-  stamp mismatch — so a live page can report its own version. Nothing here does
-  that yet.
+- **No version stamp.** Nothing enforces a version across the repo, its
+  standalone build, and the copies inlined into shipped tools. The
+  `bsp-design-system` pattern is worth copying: a `VERSION` file as source of
+  truth, a script that stamps it into each file's banner and into a
+  `--ds-version` custom property, and a deploy that refuses a stamp mismatch —
+  so a live page can report its own version.
 - **No Alpine state contract.** Now that Alpine is viable in this hosting model
   ([`../docs/06-alpine.md`](../docs/06-alpine.md)), the system should document
-  which classes and attributes bindings are expected to drive — `.is-active`,
-  `.is-dragging`, `[aria-current]`, `[aria-pressed]`, `:disabled` — the way BSP
-  documents its own. Without it every tool invents its own vocabulary and the
-  familiarity argument for adopting Alpine decays.
-- **Halo still vendors its own copy** rather than referencing this one. That is
-  correct for now: `halo-banner/AGENTS.md` forbids cross-folder dependencies,
-  and the tool must survive being pasted whole. The difference is that the
-  vendored copy now has a named upstream to re-sync from.
+  which classes and attributes bindings drive — `.is-active`, `.is-dragging`,
+  `[aria-current]`, `[aria-pressed]`, `:disabled` — as BSP documents its own.
+- **Resolve `--sans`.**
+- **Re-sync Halo when the standalone build changes.** Halo correctly vendors
+  rather than references (`halo-banner/AGENTS.md` forbids cross-folder
+  dependencies, and the tool must survive being pasted whole); it just needs a
+  named upstream, which it now has.

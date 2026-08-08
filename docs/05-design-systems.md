@@ -5,8 +5,14 @@ applies is decided by audience, not taste.
 
 | System | For | Register | Where |
 | --- | --- | --- | --- |
-| **DCS Workbench** | internal developer tooling | dark only, dense, one accent | [`../design-system/`](../design-system/README.md) in this repo |
+| **DCS Workbench** | internal developer tooling | dark only, dense, one accent | `whywhyjoe/dcs-workbench-design-system` — see [`../design-system/`](../design-system/README.md) |
 | **BSP / BMO** | employee-facing pages and apps | light, branded, warm editorial mode available | `bsp-design-system` repo |
+
+**Both ship a Claude skill.** For DCS Workbench it is `dcs-workbench-design`
+(user-invocable, declared in the repo's `SKILL.md`). If you are designing an
+interface rather than looking up one token, **invoke the skill** — it carries
+the guidelines, specimen pages, brand marks, fonts, and templates that no
+summary here can replace.
 
 Everything in this doc set — DCSPad, the SP Workbench, Halo, the File Broker —
 is a developer tool and uses **DCS Workbench**. If you are building something
@@ -37,6 +43,29 @@ Drop the file in, or paste the `:root` block plus the components you use.
 Both consume the same token set. The hosted pinning rules
 (`html.dcs-hosted .dcs-app`) live in the stylesheet — see
 [`01-hosting-and-boot.md`](01-hosting-and-boot.md) for why they matter.
+
+L1 gets a **letter mark**; L2 gets the **2×2 instrument mark**. If an L2 tool
+grows a second working surface and a status bar, it has become L1 — give it a
+letter. That is the design system's own restatement of the tier test in
+[`00-system-model.md`](00-system-model.md), and the two agree.
+
+### What to link
+
+| Building | Link |
+| --- | --- |
+| L1 workbench | `styles.css` — the whole system, `base.css` included |
+| L2 instrument | `tokens/*.css` + `dcs-workbench.css` (+ `dcs-additions.css`); **skip `base.css`** |
+| single-file pasted tool | `assets/dcs-workbench.standalone.css`, inlined |
+
+### Embedding rules
+
+- **L1**: the suite bar deliberately stays visible (desaturated) — it says "this
+  is running on your SharePoint, under your account". Pin at
+  `inset: 53px 5px 5px`, paint the surround with `box-shadow: 0 0 0 100vmax`,
+  and **always ship a suspend path** for edit mode.
+- **L2**: never set `html`, `body`, or bare element selectors, and declare
+  tokens on `.dcs-tool`, not `:root`. Two tools then coexist on one page, and no
+  stray `body { overflow: hidden }` can freeze the host page.
 
 ### Token families
 
@@ -71,17 +100,17 @@ icon tiers · `--radius-s/m/l` · `--mono`/`--sans` · `--ease` and
 
 ### Where the source lives
 
-[`design-system/dcs-workbench.css`](../design-system/) in this repo is the
-canonical copy. Read that folder's README before making system-level changes —
-it records the provenance (no standalone repo could be found, so the vendored
-Halo snapshot was promoted), the measured drift between the three copies that
-existed, and the open items.
+The standalone repo is canonical. [`../design-system/README.md`](../design-system/README.md)
+is a pointer to it and carries the reconciliation record.
 
-Halo continues to vendor its own copy, because an L2 tool must survive being
-pasted whole and `halo-banner/AGENTS.md` forbids cross-folder dependencies. The
-difference now is that the vendored copy has a named upstream to re-sync from.
-DCSPad's `styles/app.css` predates the system and shares 85 of its ~104 tokens;
-converging it is a tracked backlog item, not something to do piecemeal.
+The short version, because an earlier revision of these docs got it wrong: the
+repo is a **strict superset** of every copy in circulation. Its
+`assets/dcs-workbench.standalone.css` is byte-identical to the file Halo
+vendors, and every one of DCSPad's 104 tokens already exists upstream. Nothing
+has forked, and there is no drift backlog — only one small inconsistency in
+`--sans`. Halo correctly keeps vendoring rather than referencing, because an L2
+tool must survive being pasted whole and `halo-banner/AGENTS.md` forbids
+cross-folder dependencies; it now just has a named upstream to re-sync from.
 
 ---
 
