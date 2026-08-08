@@ -297,6 +297,26 @@ no configuration at all and a nonstandard one can override any single URL.
 
 ---
 
+## Two tenant serving facts that bite on first deployment
+
+**`.html` files may download instead of render.** Tenants with strict browser
+file handling, or sites without custom scripting enabled, serve an HTML file as
+a download. A site administrator may need to enable custom scripting. For a
+standalone host page, renaming `index.html` to `<app>.aspx` is the other way
+out. This does not affect the web-part path (boot fetches `index.html` with
+`fetch`, which is unaffected) — it affects anyone opening the shell directly.
+
+**`.mjs` is served as `application/octet-stream`.** Every generated artifact
+therefore uses the `.js` extension, including workers. Two consequences for any
+vendored runtime:
+
+- **Never emit `.mjs`.** A build that produces one will load fine locally and
+  fail silently in the tenant.
+- **Workers use ordinary same-origin URLs, never `blob:`.** A blob worker has an
+  opaque origin, and the page's `worker-src` CSP will refuse it. If a feature
+  that depends on a worker is missing while the rest of the UI appears, inspect
+  `worker-src` before anything else.
+
 ## The globals contract
 
 Cross-boundary contracts are deliberately tiny. Keep to these names:

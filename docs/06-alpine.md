@@ -6,8 +6,9 @@ design system, which the same developers use for employee-facing pages, uses
 whether new DCS apps should adopt Alpine for the same reason: fewer hand-rolled
 templates, more human-grokkable code, and one idiom developers already know.
 
-This doc is the answer, and it is a recommendation with a hard prerequisite —
-not a decision already taken. **No DCS app uses Alpine today.**
+This doc is the answer. **The CSP prerequisite has been cleared** (see below);
+what remains is a recommendation about scope, not a question about viability.
+No DCS app's *own chrome* uses Alpine yet.
 
 ---
 
@@ -59,42 +60,40 @@ template-heavy; it is *binding*-heavy.
 
 ---
 
-## The hard prerequisite — verify before adopting
+## The CSP question — resolved
 
 **Alpine v3's default build evaluates expressions with `new Function`.** Modern
-SharePoint pages ship a nonce-based `script-src` CSP. `unsafe-eval` is a
-*separate directive* from `unsafe-inline`, and **whether this tenant's modern
-pages permit it has not been verified in this workspace.**
+SharePoint pages ship a nonce-based `script-src` CSP, and `unsafe-eval` is a
+*separate directive* from `unsafe-inline` — so this was the one thing that could
+have made Alpine unusable here regardless of its merits.
 
-Evidence in favour: the BSP design system's non-negotiables specify inline
-Alpine (`x-model`, `:class`, `x-on`) as the interactivity layer for pages
-deployed to SharePoint production. If those pages work, eval is permitted.
+**It was tested by running Alpine code inside DCSPad on the tenant, and it
+works.** That result is conclusive for the whole hosting model, because of a
+fact already documented in `sp-dcspad/CLAUDE.md`: **`about:srcdoc` documents
+inherit the parent page's CSP.** The preview frame runs under the same
+`script-src` as the host page. Alpine evaluating expressions there means the
+host page permits eval, so the default build is viable in an app shell too.
 
-Evidence is not proof. **Run this on a real hosted page before writing any
-Alpine:**
+Consequences:
 
-```js
-// In the console of the actual hosting page, in view mode:
-try { new Function('return 1')(); console.log('eval OK — Alpine default build is viable'); }
-catch (e) { console.log('eval BLOCKED — CSP build only:', e.message); }
-```
+- **Use the default Alpine build**, not `@alpinejs/csp`. Inline `x-data`,
+  `x-on`, `:class`, `x-model` expressions all work — which is what keeps the
+  idiom identical to BSP and preserves the familiarity argument that motivated
+  this in the first place.
+- Every `<script>` tag you add still needs the **host nonce** — that is the
+  `unsafe-inline` half of the CSP and it is unchanged. Alpine loaded as an
+  external `<script src>` with the page's nonce is fine; a hand-written inline
+  `<script>` without one is not. See
+  [`01-hosting-and-boot.md`](01-hosting-and-boot.md).
+- One residual to confirm before writing against newer syntax: **which Alpine
+  version is actually deployed**. DCSPad's editor intelligence targets
+  **3.15.2**; check `<Site>/<Container>/lib/alpine.js` matches.
 
-- **eval OK** → the default Alpine build is viable; the recommendation below
-  applies as written.
-- **eval BLOCKED** → only `@alpinejs/csp` is viable. That build forbids inline
-  expressions entirely: every behavior must live in an `Alpine.data()` component
-  with named methods and properties. That is a much smaller win, it *diverges
-  from the BSP idiom* (killing the familiarity argument), and in that case the
-  recommendation is **do not adopt** — stay imperative and instead extract the
-  duplicated `el()` helper into one shared module.
-
-Record the result of that test in this file when someone runs it.
+*Verified: Alpine executing in DCSPad on the tenant. Recorded 2026-08-08.*
 
 ---
 
 ## Recommendation
-
-Assuming the eval gate passes:
 
 ### Adopt for L2 instruments — yes, clearly
 
@@ -180,21 +179,27 @@ boundary-shaped failures those tests exist to catch.
 
 The path is:
 
-1. Run the eval gate. Record the result here.
-2. If it passes, build the **next new L2 tool** with Alpine end to end. That is
-   the low-risk proving ground.
-3. If that goes well, use Alpine for **new views and new chrome** in existing L1
-   apps — a view is a self-contained factory, so one view can be Alpine-backed
-   while its neighbours are not.
+1. ~~Run the eval gate.~~ **Done — it passes.**
+2. Build the **next new L2 tool** with Alpine end to end. That is the low-risk
+   proving ground: one self-contained payload, no bundle, no test suite to
+   invalidate.
+3. Then use Alpine for **new views and new chrome** in existing L1 apps — a view
+   is a self-contained factory, so one view can be Alpine-backed while its
+   neighbours are not. Grids and trees inside those views stay imperative.
 4. Revisit this file with what was learned. Update the recommendation rather
    than adding a second opinion elsewhere.
 
 ## Open questions for whoever picks this up
 
-- Does the tenant's CSP permit `eval`? (the gate above — **unverified**)
 - Which self-hosted Alpine version is canonical? DCSPad's editor intelligence
   targets **Alpine 3.15.2**; confirm the deployed `lib/alpine.js` matches before
   writing against newer syntax.
 - Should the DCS Workbench design system gain a documented Alpine state contract
-  the way BSP has one (which classes and attributes bindings are expected to
-  drive)? If Alpine is adopted, yes — otherwise every tool invents its own.
+  the way BSP has one — which classes and attributes bindings are expected to
+  drive (`.is-active`, `[aria-selected]`, `[aria-invalid]`, `:checked`)? Now
+  that adoption is viable, **yes** — otherwise every tool invents its own and
+  the familiarity argument decays. That belongs in the design-system repo.
+- Does anything change for the **preview iframe**? No. Alpine remains a library
+  the *user* may load into their own code; pad chrome never appears in an
+  assembled preview document. The fact that it works there is what proved the
+  CSP question, not an invitation to use it there.

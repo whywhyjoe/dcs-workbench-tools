@@ -142,6 +142,28 @@ Adopt that for any library other apps consume.
 - [ ] Console checked for CSP violations. (Silence is not proof: a blocked
       script inside a `srcdoc` frame reports nothing.)
 - [ ] Config document reviewed — URLs correct for *this* environment.
+- [ ] A **live-tenant validation checklist** run, not just "the page loads".
+
+### The live-tenant checklist
+
+Nothing above proves the app talks to SharePoint — the mock path is designed to
+look healthy. Write an app-specific version of this and run it after every
+deploy that touches data access:
+
+1. The context chip reads **live**, not mock, and the status bar shows the
+   expected web URL and user.
+2. A read against the real web returns real data — and the request is visible,
+   with a 200, in whatever request view the app has.
+3. A **cross-site** read against another same-tenant site works, and an
+   off-tenant URL is refused with a readable message.
+4. A write succeeds, and **repeating it with the same name requires a second
+   explicit confirmation** (overwrite consent).
+5. A write whose metadata step fails leaves the file in place and offers retry —
+   it does not re-upload.
+6. Any vendored runtime with workers reports no unavailable worker.
+
+Do this in a disposable folder. Steps 4–5 are the ones that have actually been
+wrong in production.
 
 ### Rollback
 
