@@ -123,8 +123,8 @@ and `sp-dcspad/styles/app.css`.)
   which classes and attributes bindings drive — `.is-active`, `.is-dragging`,
   `[aria-current]`, `[aria-pressed]`, `:disabled` — as BSP documents its own.
   Without it every tool invents its own vocabulary.
-- **Skill discovery.** `SKILL.md` sits at `design-system/SKILL.md` now rather
-  than at a repo root. Confirm it is still discovered where you expect it to be
-  invoked from.
+- ~~**Skill discovery.**~~ Settled: `SKILL.md` stays at `design-system/SKILL.md`.
+  It is found by pointing Claude at this repo or this folder when you ask for
+  work in the design system — no root-level placement or registration needed.
 - **`uploads/`** is authoring scratch (~1.9 MB of pasted images). Prune if you
   want the space.
