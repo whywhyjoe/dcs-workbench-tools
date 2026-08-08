@@ -8,6 +8,10 @@ application server, or mandatory build step.
 > **Building a new DCS Workbench app? Start at [`docs/`](docs/README.md)** — the
 > construction method for the whole family: hosting and boot, composition,
 > SharePoint data access, the File Broker, design systems, and a new-app recipe.
+>
+> **Known gaps live in [`OPEN-ITEMS.md`](OPEN-ITEMS.md)** — deferred work and
+> decisions awaiting a human. Read it before assuming something is missing by
+> accident, and add to it rather than starting a second list.
 
 The current repository has two cooperating projects:
 

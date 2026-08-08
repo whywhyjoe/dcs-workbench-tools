@@ -111,20 +111,14 @@ and `sp-dcspad/styles/app.css`.)
 
 ## Open items
 
-- ~~**No version stamp.**~~ **Done.** `VERSION` (currently `1.0.0`) is the
-  source of truth; `tools/set-version.py` stamps it into the banner of all 12
-  shipped CSS/JS files and into `--ds-version` in `tokens/colors.css` and the
-  standalone build. `--check` is the deploy gate. Full workflow in
-  [`readme.md` § Versioning](readme.md). Halo's vendored copy and its inlined
-  `<style>` block were re-synced at the same time, so a live Halo page reports
-  the version too.
-- **No Alpine state contract.** Now that Alpine is viable in this hosting model
-  ([`../docs/06-alpine.md`](../docs/06-alpine.md)), the system should document
-  which classes and attributes bindings drive — `.is-active`, `.is-dragging`,
-  `[aria-current]`, `[aria-pressed]`, `:disabled` — as BSP documents its own.
-  Without it every tool invents its own vocabulary.
-- ~~**Skill discovery.**~~ Settled: `SKILL.md` stays at `design-system/SKILL.md`.
-  It is found by pointing Claude at this repo or this folder when you ask for
-  work in the design system — no root-level placement or registration needed.
-- **`uploads/`** is authoring scratch (~1.9 MB of pasted images). Prune if you
-  want the space.
+**Tracked in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md)** — the register for the
+whole repo. Don't keep a second list here; it will drift.
+
+Design-system items open there as of 2026-08-08: the superseded standalone repo
+is still writable (**#1**), the Alpine state contract is undefined (**#2**),
+`--check` isn't wired into a deploy gate (**#3**), the starting version `1.0.0`
+was chosen for you (**#6**), and `uploads/` is authoring scratch (**#7**).
+
+Settled here already: the version stamp exists (`VERSION` + `tools/set-version.py`,
+workflow in [`readme.md` § Versioning](readme.md)), `SKILL.md` stays in this
+folder, and `--sans` is consistent across all copies.

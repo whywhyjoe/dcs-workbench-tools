@@ -191,6 +191,9 @@ The path is:
 
 ## Open questions for whoever picks this up
 
+Also tracked in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md) (**#2**, **#5**) — the
+register for the whole repo.
+
 - Which self-hosted Alpine version is canonical? DCSPad's editor intelligence
   targets **Alpine 3.15.2**; confirm the deployed `lib/alpine.js` matches before
   writing against newer syntax.

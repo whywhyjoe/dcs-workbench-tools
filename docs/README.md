@@ -29,6 +29,10 @@ touches. Each file is sized to be read whole.
 | [`07-new-app-recipe.md`](07-new-app-recipe.md) | You are starting a new app. Step-by-step, plus an illustrative skeleton. |
 | [`08-build-test-deploy.md`](08-build-test-deploy.md) | You are about to ship, or you changed something and need to know what to rebuild and re-run. |
 
+**Known gaps:** [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md) is the register of
+deferred work and decisions awaiting a human. If something in these docs looks
+absent, check there before assuming it was an oversight.
+
 ## Reference implementations
 
 Read the code, not just these docs. In rough order of how much they teach:
