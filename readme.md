@@ -21,7 +21,7 @@ plus the two shared, non-application artifacts:
 | Folder | Role |
 | --- | --- |
 | [`docs/`](docs/README.md) | The construction method for the whole DCS Workbench app family. |
-| [`design-system/`](design-system/README.md) | Pointer to the **DCS Workbench design system**, which lives in its own repo (`whywhyjoe/dcs-workbench-design-system`) and ships a `dcs-workbench-design` Claude skill. Holds no CSS — just how to consume it, and the reconciliation record. |
+| [`design-system/`](design-system/readme.md) | The **DCS Workbench design system** — the visual language for internal developer tooling (L1 workbench / L2 instrument layers): tokens, components, 22 guideline specimens, brand marks, templates, and a user-invocable `dcs-workbench-design` Claude skill. Imported here from the former standalone repo, which is now superseded. |
 
 The folder name `dcs-file-picker` is historical. Its public component is the
 **DCS File Broker**, because it opens, reads, writes, uploads, downloads, and

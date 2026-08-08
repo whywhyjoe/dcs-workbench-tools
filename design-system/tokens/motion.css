@@ -1,0 +1,14 @@
+/* ── DCS Workbench · motion ────────────────────────────────────────────────
+   Four beats. Nothing outside them. Motion in a developer tool is feedback,
+   not personality: did it register, did the layout change, did the work
+   finish, is it still running.
+   The three durations and the easing curve are the source sheet's;
+   --dur-scan names the 820ms the source uses inline on .dcs-scanline.
+   ------------------------------------------------------------------------ */
+:root {
+  --dur-tint: .12s;   /* hover, focus, colour-only change. Never moves anything. */
+  --dur-move: .22s; /* @kind other */   /* a panel opens, a menu drops, chrome slides. */
+  --dur-beat: .46s; /* @kind other */   /* a result arrived. Once per event, never on a timer. */
+  --dur-scan: .82s; /* @kind other */   /* work in progress. Loops only while genuinely pending. */
+  --ease: cubic-bezier(.35, 0, .25, 1); /* @kind other */
+}

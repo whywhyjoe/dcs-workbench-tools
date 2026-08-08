@@ -1,0 +1,119 @@
+/* ── DCS Workbench · colour ────────────────────────────────────────────────
+   One accent. Everything else is grey or a signal.
+   Every name and value below is transcribed from the source sheet
+   (assets/dcs-workbench.standalone.css). Tokens marked ADDED did not exist
+   there as tokens — they are values the source used inline, given names.
+
+   Declared on :root here so the sheet works standalone. In a SharePoint web
+   part, re-declare the same names on the tool root (.dcs-tool { --accent: … })
+   — never on :root. See readme.md § Embedding.
+   ------------------------------------------------------------------------ */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces — four steps, in order. Never skip one to create contrast;
+     add a hairline instead. */
+  --bg-0: #14161b;          /* app ground, gutters, splitter tracks, input wells */
+  --bg-1: #1a1d23;          /* panel bodies, cards, sidebars */
+  --bg-2: #20242c;          /* chrome: topbar, panel heads, tab strips, status bar */
+  --bg-3: #2a2f3a;          /* hover, pressed, filled segment */
+  --bg-editor: #17191f;     /* code ground — matches the Monaco theme */
+  --border: #2a2e38;        /* structural hairlines. opaque by design */
+  --border-strong: #3a4150; /* edges of interactive things */
+  --border-mid: #333947;    /* segmented dividers / hover step */
+  --surround: #101216;      /* hosted SharePoint surround, behind the app */
+
+  /* Text — seven steps. --fg-faint is timestamps and hints, never body copy. */
+  --fg-strong: #f2f5fa;     /* hover, emphasis, selected-row text */
+  --fg: #e6e9ef;            /* primary text */
+  --fg-row: #d4d9e2;        /* list & menu rows at rest */
+  --fg-dim: #a2a9b8;        /* labels, inactive tabs, icon buttons at rest */
+  --fg-mid: #8b93a3;        /* panel-glyph strokes, secondary glyphs */
+  --fg-faint: #6d7484;      /* timestamps, hints, gutter numbers — NEVER body */
+  --fg-ghost: #4a5060;      /* splitter handles, disabled edges */
+
+  /* Accent — one hue. The solid fill appears exactly once per screen. */
+  --accent: #3fd8b4;
+  --accent-hi: #5ee3c4;          /* hover on the solid fill */
+  --accent-ink: #04241e;         /* ink on solid accent fills */
+  --accent-dim: #58bfa8;         /* quiet accent glyphs */
+  --accent-soft: #1e3b35;
+  --accent-soft-line: #35695c;
+  --accent-soft-fg: #79e0c6;
+  --accent-line: #2c6a5c;
+  --accent-ring: #182b28;        /* focus-ring wash */
+  --accent-soft-hover: #25473f;  /* ADDED — .dcs-btn-soft:hover ground */
+  --accent-soft-fg-hi: #8fe8d1;  /* ADDED — .dcs-btn-soft:hover text */
+
+  /* Signals — status only. A signal colour on something that is not
+     reporting status is a bug. */
+  --ok: #57d18a;            --ok-soft: #16321f;      --ok-soft-line: #2b5a38;
+  --warn: #e8b660;          --warn-soft: #2a2112;    --warn-soft-line: #554323;
+  --error: #ff6b62;         --error-fg: #ff8b82;     --error-bg: #2a1512;
+  --error-soft-line: #3a1c1a; --error-deep: #2a0705; --error-muted: #c9948e;
+  --info: #67a7f7;
+  --info-soft: #1c2a38;     --info-soft-line: #2d4761;
+  --warn-pill-line: #5b4a26;  /* ADDED — outline "unsaved" pill */
+  --info-fg: #9fc7f5;         /* ADDED — body copy inside an info notice */
+
+  /* File-type BADGES — DCSPad's original triple, names unchanged: -fg is the
+     badge's text and glyph colour, -bg its ground, -line its border. These
+     style the little "js" / "html" pill — they are NOT the node-icon tokens.
+     Five buckets only. Near relatives inherit: .ts/.mjs → js, .scss → css,
+     .svg → html, .csv/.xlsx → data. */
+  --ft-js-fg: #e3ce7a;   --ft-js-bg: #332e18;   --ft-js-line: #514a28;
+  --ft-html-fg: #e5a06a; --ft-html-bg: #33251b; --ft-html-line: #543c2b;
+  --ft-css-fg: #7eb6e8;  --ft-css-bg: #1c2a38;  --ft-css-line: #2d4761;
+  --ft-json-fg: #a9c98a; --ft-json-bg: #21281a; --ft-json-line: #3b4a2f;
+  --ft-doc-fg: #b6a8de;  --ft-doc-bg: #241f33;  --ft-doc-line: #3d3557;
+  --ft-sp-fg: #79e0c6;   --ft-sp-bg: #1e3b35;   --ft-sp-line: #35695c; /* ADDED name for the SharePoint pill */
+
+  /* Node ICONS, two tiers. The bare name IS the resting state, because rest
+     is what the whole list does. You opt INTO brightness with -active, which
+     is rationed — the folder you are inside, the selected row, a filter
+     match, a file changed since last sync. If everything is active, nothing
+     is. Each tier is a stroke + -fill pair. */
+  --node-user: #5b9184;  --node-user-fill: #1b2926;
+  --node-lib:  #5d7f9e;  --node-lib-fill:  #1b2430;
+  --node-sys:  #565c6a;  --node-sys-fill:  transparent;
+  --node-file: #7a8190;  --node-file-fill: transparent;
+  --node-js:   #9a9068;  --node-js-fill:   #24221a;
+  --node-html: #9d7d64;  --node-html-fill: #251f1a;
+  --node-css:  #6f8ba6;  --node-css-fill:  #1b232b;
+  --node-json: #7f9070;  --node-json-fill: #1e2119;
+  --node-doc:  #86809e;  --node-doc-fill:  #211f29;
+  /* -active — the called-out tier. File types borrow the badge hue so a
+     selected file and its badge agree; folders get their own bright pair. */
+  --node-user-active: var(--accent);      --node-user-active-fill: #1e3b35;
+  --node-lib-active:  var(--info);        --node-lib-active-fill:  #1c2a38;
+  --node-sys-active:  var(--fg-dim);      --node-sys-active-fill:  transparent;
+  --node-file-active: var(--fg-dim);      --node-file-active-fill: transparent;
+  --node-js-active:   var(--ft-js-fg);    --node-js-active-fill:   var(--ft-js-bg);
+  --node-html-active: var(--ft-html-fg);  --node-html-active-fill: var(--ft-html-bg);
+  --node-css-active:  var(--ft-css-fg);   --node-css-active-fill:  var(--ft-css-bg);
+  --node-json-active: var(--ft-json-fg);  --node-json-active-fill: var(--ft-json-bg);
+  --node-doc-active:  var(--ft-doc-fg);   --node-doc-active-fill:  var(--ft-doc-bg);
+  /* The current folder — the one row allowed to be brighter than -active. */
+  --node-open: var(--accent-hi);  --node-open-fill: #24463e;
+
+  /* Mark tile — the pixel alphabet plate. ADDED as tokens; the values are the
+     source document's mark spec (tile #16342e on a #2f6154 hairline, off
+     cells #233f3a). */
+  --logo-tile: #16342e;
+  --logo-tile-line: #2f6154;
+  --logo-dim: #233f3a;
+
+  /* Editor / inspector — dcspad-dark, ground #17191f, gutter #14161b, VS-dark
+     token hues. The inspector's value colours deliberately mirror the Monaco
+     theme, so a value looks the same in the editor and in the console tree.
+     ADDED as tokens; the hues are the source's own tree colours. */
+  --code-bg: #17191f;
+  --code-gutter: #14161b;
+  --code-fg: #cccccc;
+  --code-key: #9cdcfe;
+  --code-string: #ce9178;
+  --code-number: #b5cea8;
+  --code-keyword: #569cd6;
+  --code-comment: #6a9955;
+  --code-selector: #d7ba7d;
+}

@@ -1,0 +1,11 @@
+/* ── DCS Workbench · elevation ─────────────────────────────────────────────
+   There is ONE shadow, and it means "this floats above the app": menus,
+   dialogs, toasts. Panels never carry it — they are separated by hairlines
+   and surface steps. Using a shadow to separate two adjacent panels is the
+   mistake this rule exists to prevent.
+   ------------------------------------------------------------------------ */
+:root {
+  --shadow-pop: 0 10px 28px -10px #000d;      /* the only shadow in the system */
+  --shadow-tip: 0 12px 32px -12px #000c;      /* ADDED — the tip, one notch tighter */
+  --ring: 0 0 0 2px var(--accent-ring);       /* ADDED — focus wash, named */
+}

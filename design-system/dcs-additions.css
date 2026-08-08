@@ -1,0 +1,81 @@
+/* ── DCS Workbench · additions ─────────────────────────────────────────────
+   Everything here is ADDED by this design system. It is kept out of
+   dcs-workbench.css so that sheet stays a verbatim copy of the source.
+   Six things only, each a name for a pattern the source specifies in
+   prose or inline but never named.
+   ------------------------------------------------------------------------ */
+
+/* 1 · The work row of the L1 shell — the 1fr band between topbar and status
+   bar. The source's .dcs-app declares the grid; nothing named the child. */
+.dcs-work { display: flex; min-height: 0; min-width: 0; overflow: hidden; }
+.dcs-work-cols { display: flex; flex: 1; min-height: 0; min-width: 0; }
+.dcs-work-rows { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; }
+
+/* 2 · The dimmed shortcut inside a button — "Run ⌘↵". Mono, 60%. */
+.dcs-kbd-inline { font: 500 11px/1 var(--mono); opacity: .6; }
+
+/* 3 · The marks. A pixel alphabet, not a logo: a letter on a 4 × 5 grid
+   inside a tinted tile. Cells 3px, gap 1.5px, tile padding 4px, radius 6px —
+   double both for a masthead (.dcs-mark-lg). Lit cells --accent, off cells
+   --logo-dim; two lit cells per mark drop to 55% so the mark reads as a
+   display that is ON, not a printed square. Letters live in assets/mark-*.svg
+   — this class is for building one inline. */
+.dcs-mark {
+  display: inline-grid; grid-template-columns: repeat(4, 3px); grid-auto-rows: 3px;
+  gap: 1.5px; padding: 4px; border-radius: var(--radius-l);
+  background: var(--logo-tile); border: 1px solid var(--logo-tile-line);
+}
+.dcs-mark i { background: var(--logo-dim); }
+.dcs-mark i.on { background: var(--accent); }
+.dcs-mark i.dim { background: var(--accent); opacity: .55; }
+.dcs-mark-lg { grid-template-columns: repeat(4, 6px); grid-auto-rows: 6px; gap: 3px; padding: 7px; border-radius: 8px; }
+
+/* The L2 instrument mark: four cells, one hue, four brightness steps.
+   No tile, no outline, no background — it sits directly on the tool header,
+   and it is identical on every compact tool. */
+.dcs-mark-2x2 { display: inline-grid; grid-template-columns: repeat(2, 6px); grid-auto-rows: 6px; gap: 2px; }
+.dcs-mark-2x2 i { background: var(--accent); }
+.dcs-mark-2x2 i:nth-child(2) { opacity: .62; }
+.dcs-mark-2x2 i:nth-child(3) { opacity: .38; }
+.dcs-mark-2x2 i:nth-child(4) { opacity: .2; }
+.dcs-mark-2x2-lg { grid-template-columns: repeat(2, 14px); grid-auto-rows: 14px; gap: 4px; }
+
+/* 4 · Two more file-type badges. The tokens for both already exist
+   (--ft-doc-*, and the SharePoint pill is the accent-soft trio); the source
+   sheet only wired data-type for js/html/css/json, and paints the pdf and sp
+   pills inline. Named here so they cannot drift. */
+.dcs-badge[data-type="doc"], .dcs-badge[data-type="pdf"], .dcs-badge[data-type="docx"], .dcs-badge[data-type="pptx"] {
+  color: var(--ft-doc-fg); background: var(--ft-doc-bg); border-color: var(--ft-doc-line);
+}
+.dcs-badge[data-type="sp"] { color: var(--ft-sp-fg); background: var(--ft-sp-bg); border-color: var(--ft-sp-line); }
+
+/* 5 · Node rows as buttons. The source comp draws .dcs-noderow as a <div>, so
+   the sheet never resets the UA button chrome; the React NodeRow is a real
+   button (it is a click target) and needs the reset. Paint and metrics are
+   unchanged — this only removes what the browser adds. */
+button.dcs-noderow { background: transparent; border: 0; text-align: left; }
+button.dcs-noderow:hover { background: var(--bg-3); }
+button.dcs-noderow.is-called-out { background: var(--bg-2); }
+
+/* 6 · Cascadia Code ligatures, ON. => !== <= -> are contextual alternates in
+   Cascadia Code; browsers keep calt on by default, but <input>, <textarea>
+   and <select> opt out on their own and a host page can switch it off, so a
+   tool that reads a URL back to you in a mono field would silently lose them.
+
+   Specificity matters here and the obvious implementation does not work: the
+   `font:` shorthand RESETS font-variant-* and font-feature-settings, and this
+   sheet sets type almost entirely through shorthand ramp tokens
+   (`font: var(--t-code)`), so a zero-specificity or inherited rule is wiped
+   out on every element that carries one. `.dcs-app *` / `.dcs-tool *` match
+   the (0,1,0) of the component rules and this file is imported last, so these
+   land after them. The two utilities below are also (0,1,0) and come later
+   still, so either can override per element. This file must stay last in
+   styles.css. */
+.dcs-app, .dcs-tool, .dcs-app *, .dcs-tool * {
+  font-variant-ligatures: var(--mono-ligatures);
+  font-feature-settings: var(--mono-features);
+}
+/* Opt in outside a shell (a bare specimen, a docs page), and the escape hatch
+   for the rare place a ligature is wrong — a character-by-character diff. */
+.dcs-liga { font-variant-ligatures: var(--mono-ligatures); font-feature-settings: var(--mono-features); }
+.dcs-liga-off { font-variant-ligatures: none; font-feature-settings: "calt" 0, "liga" 0; }

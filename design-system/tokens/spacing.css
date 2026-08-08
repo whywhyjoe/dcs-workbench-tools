@@ -1,0 +1,40 @@
+/* ── DCS Workbench · space, shape, density ─────────────────────────────────
+   A 2px base, but only these values ship. Gutters between panes are always
+   5px — that is the splitter track, a control, not a spacing step.
+   Radii and density tiers are the source sheet's; the scale names are ADDED.
+   ------------------------------------------------------------------------ */
+:root {
+  --s-1: 2px;  --s-2: 4px;  --s-3: 6px;  --s-4: 8px;  --s-5: 10px;
+  --s-6: 12px; --s-7: 14px; --s-8: 16px; --s-9: 20px; --s-10: 24px;
+  --gutter: 5px;            /* splitter track between panes — always */
+
+  /* Radius: three, and they are assigned, not chosen by eye. */
+  --radius-s: 3px;          /* rows, badges, tags */
+  --radius-m: 4px;          /* buttons, inputs, cards */
+  --radius-l: 6px;          /* app shell, menus, dialogs */
+  --radius-pill: 999px;     /* status chips only */
+
+  /* Density tiers — pick by the container, not by taste, and never mix two
+     tiers in one row. */
+  --h-lg: 28px;  --pad-lg: 0 13px;  --fs-lg: 12.5px;   /* topbar / tool header */
+  --h-md: 26px;  --pad-md: 0 12px;  --fs-md: 12px;     /* the default */
+  --h-sm: 22px;  --pad-sm: 0 8px;   --fs-sm: 11px;     /* panel heads, inline */
+  --h-xs: 20px;  --pad-xs: 0 6px;   --fs-xs: 10.5px;   /* escape hatch, grouped */
+
+  /* Shell */
+  --topbar-h: 40px;
+  --status-h: 24px;
+  --tool-head-h: 40px;
+  --panel-head-h: 30px;
+  --app-inset: 53px var(--gutter) var(--gutter);  /* under the SP suite bar */
+
+  /* Shipping layout defaults, transcribed from the app's own styles/app.css.
+     They are live custom properties there — the splitters write to them — so a
+     tool that adopts the shell inherits the same starting geometry. */
+  --sidebar-w: 230px;
+  --editors-w: 1fr;  /* @kind spacing */
+  --runtime-w: 1fr;  /* @kind spacing */
+  --preview-h: 1fr;  /* @kind spacing */
+  --diag-h: 260px;
+  --diag-fs: 12px;   /* console + network text size; the ⚙ menu steps it */
+}

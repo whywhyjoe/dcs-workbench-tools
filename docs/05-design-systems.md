@@ -5,14 +5,16 @@ applies is decided by audience, not taste.
 
 | System | For | Register | Where |
 | --- | --- | --- | --- |
-| **DCS Workbench** | internal developer tooling | dark only, dense, one accent | `whywhyjoe/dcs-workbench-design-system` — see [`../design-system/`](../design-system/README.md) |
+| **DCS Workbench** | internal developer tooling | dark only, dense, one accent | [`../design-system/`](../design-system/readme.md) — in this repo |
 | **BSP / BMO** | employee-facing pages and apps | light, branded, warm editorial mode available | `bsp-design-system` repo |
 
-**Both ship a Claude skill.** For DCS Workbench it is `dcs-workbench-design`
-(user-invocable, declared in the repo's `SKILL.md`). If you are designing an
-interface rather than looking up one token, **invoke the skill** — it carries
-the guidelines, specimen pages, brand marks, fonts, and templates that no
-summary here can replace.
+**The DCS Workbench system ships a Claude skill**, `dcs-workbench-design`
+(user-invocable, `design-system/SKILL.md`). If you are designing an interface
+rather than looking up one token, **invoke the skill** — it carries the
+guidelines, specimen pages, brand marks, fonts, and templates that no summary
+here can replace. `design-system/readme.md` is the authoritative written guide;
+[`../design-system/INTEGRATION.md`](../design-system/INTEGRATION.md) covers how
+the folder relates to the rest of this repo.
 
 Everything in this doc set — DCSPad, the SP Workbench, Halo, the File Broker —
 is a developer tool and uses **DCS Workbench**. If you are building something
@@ -100,17 +102,18 @@ icon tiers · `--radius-s/m/l` · `--mono`/`--sans` · `--ease` and
 
 ### Where the source lives
 
-The standalone repo is canonical. [`../design-system/README.md`](../design-system/README.md)
-is a pointer to it and carries the reconciliation record.
+[`../design-system/`](../design-system/readme.md) in this repo, imported from
+the former standalone `whywhyjoe/dcs-workbench-design-system` at `5c69a34`. That
+repo is superseded — edit here.
 
-The short version, because an earlier revision of these docs got it wrong: the
-repo is a **strict superset** of every copy in circulation. Its
+For the record, because an earlier revision of these docs got it wrong: the
+system is a **strict superset** of every copy in circulation. Its
 `assets/dcs-workbench.standalone.css` is byte-identical to the file Halo
-vendors, and every one of DCSPad's 104 tokens already exists upstream. Nothing
-has forked, and there is no drift backlog — only one small inconsistency in
-`--sans`. Halo correctly keeps vendoring rather than referencing, because an L2
-tool must survive being pasted whole and `halo-banner/AGENTS.md` forbids
-cross-folder dependencies; it now just has a named upstream to re-sync from.
+vendors, and every one of DCSPad's 104 tokens already existed in it. Nothing had
+forked and there was no drift backlog — only one inconsistency in `--sans`,
+now resolved. Halo correctly keeps vendoring rather than referencing, because an
+L2 tool must survive being pasted whole and `halo-banner/AGENTS.md` forbids
+cross-folder dependencies; it re-syncs from the standalone build.
 
 ---
 

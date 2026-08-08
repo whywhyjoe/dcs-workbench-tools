@@ -1,0 +1,27 @@
+<!-- @dsCard group="Colors" viewport="700x150" subtitle="Five buckets. Anything else stays grey — a sixth hue needs a sixth pane" name="File type" -->
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>body{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg)}
+.g{display:grid;gap:10px}.r{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.sw{flex:1 1 0;min-width:0;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);overflow:hidden}
+.sw .chip{height:34px}.sw .m{padding:7px 9px}
+.sw .n{font:500 11px/1.3 var(--mono);color:var(--fg-row);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sw .h{font:400 10px/1.3 var(--mono);color:var(--fg-faint);margin-top:2px}
+.sw .u{font:400 10.5px/1.4 var(--sans);color:var(--fg-dim);margin-top:5px;text-wrap:pretty}
+.lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint)}
+</style></head><body><div class="g">
+<div class="r" style="gap:6px">
+<span class="dcs-badge" data-type="js">js</span><span class="dcs-badge" data-type="html">html</span>
+<span class="dcs-badge" data-type="css">css</span><span class="dcs-badge" data-type="json">json</span>
+<span class="dcs-badge" data-type="pdf">pdf</span><span class="dcs-badge" data-type="sp">sp</span>
+<span class="dcs-badge">zip</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:2px">
+<div><div style="font:500 10.5px/1.4 var(--mono);color:var(--ft-js-fg)">--ft-js-*</div><div style="font:10.5px/1.4 var(--sans);color:var(--fg-dim)">JavaScript · .ts .mjs</div></div>
+<div><div style="font:500 10.5px/1.4 var(--mono);color:var(--ft-html-fg)">--ft-html-*</div><div style="font:10.5px/1.4 var(--sans);color:var(--fg-dim)">HTML · .svg .aspx</div></div>
+<div><div style="font:500 10.5px/1.4 var(--mono);color:var(--ft-css-fg)">--ft-css-*</div><div style="font:10.5px/1.4 var(--sans);color:var(--fg-dim)">CSS · .scss</div></div>
+<div><div style="font:500 10.5px/1.4 var(--mono);color:var(--ft-json-fg)">--ft-json-*</div><div style="font:10.5px/1.4 var(--sans);color:var(--fg-dim)">Data · .csv .xlsx</div></div>
+<div><div style="font:500 10.5px/1.4 var(--mono);color:var(--ft-doc-fg)">--ft-doc-*</div><div style="font:10.5px/1.4 var(--sans);color:var(--fg-dim)">Document · .pdf .docx</div></div>
+</div>
+<div style="font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty">Each is a triple: <code style="color:var(--fg-dim)">-fg</code> pill text, <code style="color:var(--fg-dim)">-bg</code> ground, <code style="color:var(--fg-dim)">-line</code> border. A <code style="color:var(--fg-dim)">--ft-*</code> token paints a pill; a <code style="color:var(--fg-dim)">--node-*</code> token paints an icon.</div>
+</div></body></html>

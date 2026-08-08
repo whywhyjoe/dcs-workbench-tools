@@ -1,0 +1,24 @@
+<!-- @dsCard group="Motion" viewport="700x180" subtitle="Four beats. Nothing outside them" name="Motion beats" -->
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>body{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg)}
+.g{display:grid;gap:10px}.r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty}
+.lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint)}
+.cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint)}
+.col{display:flex;flex-direction:column;gap:8px}
+</style></head><body><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+<div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:14px">
+<div class="r" style="gap:8px"><span style="font:600 14px/1 var(--mono);color:var(--accent)">tint</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint)">120ms</span></div>
+<div class="note" style="margin-top:8px;color:var(--fg-dim)">Hover, focus, colour-only change. Never moves anything.</div>
+<code style="display:block;margin-top:9px;font:10.5px/1.5 var(--mono);color:var(--fg-faint);white-space:pre-line">transition:\A  background .12s,\A  color .12s</code></div><div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:14px">
+<div class="r" style="gap:8px"><span style="font:600 14px/1 var(--mono);color:var(--accent)">move</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint)">220ms</span></div>
+<div class="note" style="margin-top:8px;color:var(--fg-dim)">A panel opens, a menu drops, chrome slides. Layout changed and you should see how.</div>
+<code style="display:block;margin-top:9px;font:10.5px/1.5 var(--mono);color:var(--fg-faint);white-space:pre-line">.dcs-menu\A.dcs-panel-enter</code></div><div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:14px">
+<div class="r" style="gap:8px"><span style="font:600 14px/1 var(--mono);color:var(--accent)">beat</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint)">460ms</span></div>
+<div class="note" style="margin-top:8px;color:var(--fg-dim)">A result arrived. Pop, flash, toast. Once per event, never on a timer.</div>
+<code style="display:block;margin-top:9px;font:10.5px/1.5 var(--mono);color:var(--fg-faint);white-space:pre-line">.dcs-pop\A.dcs-toast</code></div><div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:14px">
+<div class="r" style="gap:8px"><span style="font:600 14px/1 var(--mono);color:var(--accent)">scan</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint)">820ms</span></div>
+<div class="note" style="margin-top:8px;color:var(--fg-dim)">Work in progress. Sweeps once for a fast run; loops only while genuinely pending.</div>
+<code style="display:block;margin-top:9px;font:10.5px/1.5 var(--mono);color:var(--fg-faint);white-space:pre-line">.is-sweeping\A.is-pending</code></div>
+</div></body></html>

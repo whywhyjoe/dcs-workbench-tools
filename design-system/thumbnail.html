@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="./styles.css">
+<style>html,body{margin:0;width:1280px;height:854px;overflow:hidden}
+.tile{display:grid;grid-template-columns:1fr 150px;width:1280px;height:854px}
+.main{display:grid;place-items:center;background:var(--bg-0)}
+.mark{display:flex;align-items:center;gap:34px}
+.grid{display:grid;grid-template-columns:repeat(4,26px);grid-auto-rows:26px;gap:13px;padding:30px;border-radius:34px;background:var(--logo-tile);border:5px solid var(--logo-tile-line)}
+.grid i{background:var(--logo-dim)}.grid i.on{background:var(--accent)}.grid i.dim{background:var(--accent);opacity:.55}
+.word{font:700 92px/1 var(--mono);letter-spacing:.02em;color:var(--fg)}
+.word b{color:var(--accent);font-weight:700}
+.strip{display:grid;grid-template-rows:repeat(4,1fr)}
+</style></head><body>
+<div class="tile">
+<div class="main"><div class="mark">
+<span class="grid"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i class="dim"></i><i class="on"></i><i></i><i></i><i class="on"></i><i class="on"></i><i></i><i></i><i class="dim"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+<span class="word">DCS<b>WB</b></span>
+</div></div>
+<div class="strip">
+<i style="background:var(--accent-hi)"></i>
+<i style="background:var(--warn)"></i>
+<i style="background:var(--info)"></i>
+<i style="background:var(--error)"></i>
+</div>
+</div></body></html>

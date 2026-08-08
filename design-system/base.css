@@ -1,0 +1,37 @@
+/* ── DCS Workbench · base ──────────────────────────────────────────────────
+   Document-level rules for a TAKEOVER (L1) tool, the specimen cards, and the
+   UI kits.
+
+   ⚠ Do NOT ship this file inside a SharePoint web part. An L2 instrument
+   imports tokens/*.css + dcs-workbench.css only, and re-declares the tokens
+   on .dcs-tool. Setting html/body from a web part breaks the host page for
+   everyone. See readme.md § Embedding.
+   ------------------------------------------------------------------------ */
+html, body { margin: 0; }
+body {
+  background: var(--surround);
+  color: var(--fg);
+  font: var(--t-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Cascadia Code ligatures, on. => !== <= -> are contextual alternates; they
+   are on by default but form controls and some host stylesheets switch them
+   off. NOTE the specificity: the `font:` shorthand RESETS font-variant-* and
+   font-feature-settings, so an inherited rule loses to any rule that sets
+   `font: var(--t-*)`. These declarations must sit on selectors that match or
+   beat the ones setting the shorthand. Sans is unaffected. */
+body, body * { font-variant-ligatures: var(--mono-ligatures); font-feature-settings: var(--mono-features); }
+code, kbd, samp, pre { font-family: var(--mono); font-variant-ligatures: var(--mono-ligatures); font-feature-settings: var(--mono-features); }
+::selection { background: var(--accent-soft); color: var(--fg-strong); }
+
+/* Focus. ADDED to the system, not inherited from DCSPad. The token
+   (--accent-ring) and the field treatment already existed; what was missing
+   was one rule covering every control. :focus-visible only, so a mouse click
+   on a row never lights a ring, and it is colour + ring — no size change,
+   per the no-layout-shift rule. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 1px solid var(--accent-soft-line);
+  outline-offset: 1px;
+  box-shadow: var(--ring);
+}

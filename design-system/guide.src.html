@@ -1,0 +1,349 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>DCS Workbench Design System · Guide</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<script src="assets/icons.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+<style>
+html{scroll-behavior:smooth}body{margin:0;background:var(--bg-0);color:var(--fg);font:var(--t-body);-webkit-font-smoothing:antialiased}
+a{color:var(--accent-soft-fg);text-decoration:none;border-bottom:1px solid transparent}a:hover{color:var(--accent);border-bottom-color:var(--accent-soft-line)}
+.page{display:grid;grid-template-columns:236px minmax(0,1fr);gap:0;max-width:1240px;margin:0 auto}
+/* rail */
+.rail{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;border-right:1px solid var(--border);background:var(--bg-0);padding:22px 0 40px}
+.rail-mark{display:flex;align-items:center;gap:10px;padding:0 18px 18px}
+.rail-mark .wm{font:700 15px/1 var(--mono);letter-spacing:.02em;color:var(--fg-strong)}
+.rail-mark .wm i{font-style:normal;font-weight:300;color:var(--fg-dim)}
+.rail-grp{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-ghost);padding:16px 18px 7px}
+.rail a{display:block;padding:5px 18px;font:500 12.5px/1.4 var(--sans);color:var(--fg-dim);border-left:2px solid transparent;border-bottom:0}
+.rail a:hover{color:var(--fg-row);background:var(--bg-1)}
+.rail a.on{color:var(--accent-soft-fg);border-left-color:var(--accent);background:var(--accent-soft)}
+.rail .ver{padding:14px 18px 0;font:400 10.5px/1.5 var(--mono);color:var(--fg-ghost)}
+/* content */
+main{padding:0 40px 120px;min-width:0}
+section{padding-top:56px;scroll-margin-top:0}
+h1{font:600 26px/1.2 var(--sans);color:var(--fg-strong);margin:0 0 10px}
+h2{font:600 17px/1.25 var(--sans);color:var(--fg-strong);margin:0 0 6px}
+h3{font:600 15px/1.3 var(--sans);color:var(--fg-row);margin:22px 0 6px}
+.eyebrow{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);margin-bottom:9px}
+p{font:400 13px/1.65 var(--sans);color:var(--fg-dim);margin:0 0 10px;max-width:74ch;text-wrap:pretty}
+p.lede{font-size:14px;color:var(--fg-row)}
+strong{color:var(--fg-row);font-weight:600}em{color:var(--fg-row);font-style:italic}
+code{font:400 12px/1.4 var(--mono);color:var(--accent-soft-fg)}
+ul{margin:0 0 12px;padding-left:17px;max-width:74ch}li{font:400 13px/1.65 var(--sans);color:var(--fg-dim);margin-bottom:5px;text-wrap:pretty}
+hr{border:0;border-top:1px solid var(--border);margin:34px 0 0}
+.head{border-bottom:1px solid var(--border);padding-bottom:16px}
+/* masthead */
+.mast{display:flex;gap:18px;align-items:center;padding:44px 0 0}
+.mast .tile{width:60px;height:60px;flex:none;border-radius:6px;background:var(--accent-soft);border:1px solid var(--accent-soft-line);display:grid;place-items:center}
+.mast h1{margin:0}
+.mast .sub{font:400 13px/1.5 var(--sans);color:var(--fg-dim);margin-top:4px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:20px;padding:0 8px;border-radius:999px;background:var(--bg-2);border:1px solid var(--border);font:500 10px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--fg-faint)}
+.pills{display:flex;gap:6px;margin-top:10px}
+/* specimen card */
+figure.spec{margin:16px 0 0;border:1px solid var(--border);border-radius:var(--radius-l);background:var(--bg-1);overflow:hidden}
+figure.spec>figcaption{display:block;padding:9px 12px;background:var(--bg-2);border-bottom:1px solid var(--border)}
+figure.spec>figcaption .n{font:600 12.5px/1.5 var(--sans);color:var(--fg-strong);margin-right:9px}
+figure.spec>figcaption .s{font:400 11.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty}
+figure.spec>.body{display:block;overflow-x:auto;overscroll-behavior-x:contain}
+figure.spec>.body>.pane{min-width:648px}
+/* prose blocks */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.note{border:1px solid var(--border);border-radius:var(--radius-m);background:var(--bg-1);padding:13px 14px}
+.note .t{font:600 12.5px/1.3 var(--sans);color:var(--fg-strong);margin-bottom:5px}
+.note p{margin:0;font-size:12.5px}
+.note.accent{background:var(--accent-soft);border-color:var(--accent-soft-line)}
+.note.accent .t{color:var(--accent-soft-fg)}.note.accent p{color:var(--fg-row)}
+table{border-collapse:collapse;width:100%;margin:14px 0 4px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m)}
+th{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg-2)}
+td{font:400 12.5px/1.55 var(--sans);color:var(--fg-dim);padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;text-wrap:pretty}
+tr:last-child td{border-bottom:0}
+td.y{color:var(--ok)}td.n{color:var(--error)}
+.mono{font-family:var(--mono);font-size:12px;color:var(--fg-row)}
+pre{margin:12px 0;padding:12px 14px;background:var(--bg-editor);border:1px solid var(--border);border-radius:var(--radius-m);overflow:auto;font:400 12px/1.6 var(--mono);color:var(--fg-row)}
+pre .c{color:var(--fg-ghost)}
+.inv{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:14px}
+.inv .g{border:1px solid var(--border);border-radius:var(--radius-m);background:var(--bg-1);padding:10px 12px}
+.inv .g .h{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);margin-bottom:6px}
+.inv .g .l{font:400 11.5px/1.7 var(--mono);color:var(--fg-row);word-break:break-word}
+@media (max-width:900px){.page{grid-template-columns:1fr}.rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}main{padding:0 20px 80px}.grid2{grid-template-columns:1fr}}
+/* ligatures: every rule above that sets the `font:` shorthand resets them, so restate on the same selectors */
+body,.rail a,.rail-mark .wm,.rail .ver,.rail-grp,h1,h2,h3,p,li,td,th,code,pre,.mono,.eyebrow,.pill,.mast .sub,.note .t,.inv .g .h,.inv .g .l,figure.spec>figcaption .n,figure.spec>figcaption .s{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+<template id="__bundler_thumbnail" data-bg-color="#14161b">
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" fill="#14161b"/><rect x="30" y="24" width="60" height="72" rx="8" fill="#173c35" stroke="#3fd8b4" stroke-width="2"/><g fill="#3fd8b4"><rect x="42" y="36" width="9" height="9"/><rect x="55" y="36" width="9" height="9"/><rect x="68" y="36" width="9" height="9"/><rect x="42" y="49" width="9" height="9"/><rect x="68" y="49" width="9" height="9"/><rect x="42" y="62" width="9" height="9"/><rect x="68" y="62" width="9" height="9"/><rect x="42" y="75" width="9" height="9"/><rect x="55" y="75" width="9" height="9"/><rect x="68" y="75" width="9" height="9"/></g></svg>
+</template>
+</head><body>
+<div class="page">
+<nav class="rail">
+<div class="rail-mark"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="20" height="20" rx="5" fill="var(--accent-soft)" stroke="var(--accent-soft-line)"/><g fill="var(--accent)"><rect x="6" y="5" width="3" height="3"/><rect x="10" y="5" width="3" height="3"/><rect x="6" y="9" width="3" height="3"/><rect x="13" y="9" width="3" height="3"/><rect x="6" y="13" width="3" height="3"/><rect x="10" y="13" width="3" height="3"/></g></svg><span class="wm">DCS<i>Workbench</i></span></div>
+<div class="rail-grp">Start</div>
+<a href="#overview">Overview</a><a href="#use">How to use it</a><a href="#rules">Six rules</a><a href="#layers">Two layers</a>
+<div class="rail-grp">Foundations</div>
+<a href="#colour">Colour</a><a href="#type">Type</a><a href="#space">Space &amp; shape</a><a href="#motion">Motion</a><a href="#icons">Icons &amp; brand</a>
+<div class="rail-grp">Build</div>
+<a href="#components">Components</a><a href="#templates">Templates</a><a href="#embedding">Embedding</a>
+<div class="rail-grp">Practice</div>
+<a href="#voice">Copy voice</a><a href="#dodont">Do / don't</a><a href="#upgrades">Upgrades</a><a href="#caveats">Caveats</a>
+<div class="ver">v1.0 · dark only<br>2026-08-02</div>
+</nav>
+<main>
+
+<section id="overview" style="padding-top:0">
+<div class="mast"><div class="tile"><svg width="30" height="30" viewBox="0 0 22 22" aria-hidden="true"><g fill="var(--accent)"><rect x="4" y="3" width="3" height="3"/><rect x="8" y="3" width="3" height="3"/><rect x="12" y="3" width="3" height="3"/><rect x="4" y="7" width="3" height="3"/><rect x="15" y="7" width="3" height="3"/><rect x="4" y="11" width="3" height="3"/><rect x="15" y="11" width="3" height="3"/><rect x="4" y="15" width="3" height="3"/><rect x="8" y="15" width="3" height="3"/><rect x="12" y="15" width="3" height="3"/></g></svg></div>
+<div><h1>DCS Workbench Design System</h1><div class="sub">The design system for our internal developer tools — DCSPad, SP Workbench, Halo, and whatever comes next.</div>
+<div class="pills"><span class="pill">v1.0</span><span class="pill">dark only</span><span class="pill">no build step</span><span class="pill">no CDN</span></div></div></div>
+<p class="lede" style="margin-top:24px">It is deliberately <em>not</em> BMO and not SharePoint: when a page looks like this, you are inside a specialised instrument built by and for this team. End-user app UI stays in the BMO design system. This is the other thing.</p>
+<p>It is the DCSPad token set, codified — <strong>nothing in DCSPad is deprecated</strong>. Everything new is additive, and every recommended change to an existing repo is listed, with a reason, under <a href="#upgrades">Recommended upgrades</a>.</p>
+</section>
+
+<section id="use">
+<div class="eyebrow">Start</div><h2>How to use it</h2>
+<p>Three ways in, in order of how much of the system you want. Pick one — they do not mix well in the same file.</p>
+<div class="grid2">
+<div class="note"><div class="t">1 · Link the sheet</div><p>One stylesheet, every token and every <code>.dcs-*</code> class. For a repo-backed tool that can reference files.</p><pre style="margin:10px 0 0">&lt;link rel="stylesheet" href="styles.css"&gt;</pre></div>
+<div class="note"><div class="t">2 · Paste it inline</div><p>Copy <code>assets/dcs-workbench.standalone.css</code> into a <code>&lt;style&gt;</code> block. The tool stays a single file you can email, and still looks like family.</p></div>
+<div class="note"><div class="t">3 · Start from a template</div><p><code>templates/dcspad</code>, <code>templates/sp-workbench</code> (L1) or <code>templates/compact-tool</code> (L2) — real shells with the chrome already right. See <a href="#templates">Templates</a>.</p></div>
+<div class="note accent"><div class="t">The one contract</div><p>Tools get copied, inlined and edited in place. That is fine. <strong>Keep the token names</strong> even when you paste the values. A drifted teal is still family; a renamed <code>--brand-green</code> can never be swept back in.</p></div>
+</div>
+<h3>What is in the box</h3>
+<table><tr><th>Path</th><th>What it is</th></tr>
+<tr><td class="mono">styles.css</td><td>Global entry point — an <code>@import</code> list only. Link this one file.</td></tr>
+<tr><td class="mono">tokens/</td><td><code>colors</code> · <code>typography</code> · <code>fonts</code> · <code>spacing</code> · <code>motion</code> · <code>elevation</code></td></tr>
+<tr><td class="mono">base.css</td><td>Document resets, <code>:focus-visible</code>, selection. L1 pages and specimens only — <strong>not for web parts</strong>.</td></tr>
+<tr><td class="mono">dcs-workbench.css</td><td>The component sheet — every <code>.dcs-*</code> class, verbatim from the source.</td></tr>
+<tr><td class="mono">dcs-additions.css</td><td>The six things this compilation added, kept separate on purpose.</td></tr>
+<tr><td class="mono">assets/</td><td><code>icons.svg</code> sprite · <code>icons.js</code> (self-injecting) · letter marks · instrument mark · Cascadia Code · the untouched standalone sheet</td></tr>
+<tr><td class="mono">components/</td><td>React primitives, grouped by concern — a <code>.prompt.md</code> per component</td></tr>
+<tr><td class="mono">templates/</td><td>Starting points: <code>dcspad</code> (L1) · <code>sp-workbench</code> (L1) · <code>compact-tool</code> (L2)</td></tr></table>
+</section>
+
+<section id="rules">
+<div class="eyebrow">Start</div><h2>Six rules that make everything else fall out</h2>
+<ul>
+<li><strong>Sharper than its host.</strong> It lives inside corporate SharePoint. It should read as a precision instrument dropped onto that page — never as a themed SharePoint page, and never as a decorated one.</li>
+<li><strong>One accent, used once.</strong> Teal is structural: rails, hairlines, active states, glyphs. A solid accent fill appears exactly once per screen, on the verb that runs the thing.</li>
+<li><strong>Colour is information.</strong> Signals mean status. File type is a colour. Folder role is a colour. If a colour tells you nothing, the element is grey.</li>
+<li><strong>Hierarchy by surface, not shadow.</strong> Four greys stack: ground, panel, chrome, hover. Hairlines separate. One shadow exists and it means "floating above the app."</li>
+<li><strong>Mono means machine.</strong> Anything a machine produced or will consume — paths, GUIDs, sizes, statuses, code — is monospace. Everything a human wrote is sans.</li>
+<li><strong>Copy-safe by design.</strong> No build step, no CDN, no icon package. A tool can be a single HTML file with the tokens pasted inline and still be unmistakably part of the family.</li>
+</ul>
+</section>
+
+<section id="layers">
+<div class="eyebrow">Start</div><h2>Two layers, one vocabulary</h2>
+<p>Pick before you start. They differ in shell, not in tokens — a control that looks a certain way in one looks identical in the other.</p>
+<table><tr><th>&nbsp;</th><th>L1 · Workbench</th><th>L2 · Instrument</th></tr>
+<tr><td class="mono">What</td><td>Multi-pane instruments that take over the page. DCSPad, SP Workbench.</td><td>One job, one screen, inside a single web part in normal page flow.</td></tr>
+<tr><td class="mono">Shell</td><td><code>.dcs-app</code> — 40px topbar / 1fr work / 24px status</td><td><code>.dcs-tool</code> — 40px head / body, no status bar</td></tr>
+<tr><td class="mono">Seat</td><td>Fixed <code>inset: 53px 5px 5px</code>, radius 6, surround <code>#101216</code></td><td>In flow, own dark ground, 1px border, radius 6 — never full-bleed</td></tr>
+<tr><td class="mono">Has</td><td>Splitters, collapsible panes, status bar, keyboard shortcuts</td><td>Control column plus optional canvas; stacks below 720px</td></tr>
+<tr><td class="mono">Density</td><td>22–30px controls · 10px uppercase panel titles</td><td>26–28px controls · 9.5px uppercase group titles</td></tr>
+<tr><td class="mono">Identity</td><td>Gets a letter mark</td><td>No letter — the 2×2 instrument mark instead</td></tr></table>
+<p style="margin-top:12px">If an L2 tool grows a second working surface and a status bar, it has become L1. Give it a letter.</p>
+</section>
+
+<hr>
+<section id="colour">
+<div class="eyebrow">Foundations</div><h2>Colour</h2>
+<p class="lede">One accent hue and nothing else decorative. Solid <code>--accent</code> fill appears <strong>exactly once per screen</strong> — on the verb that runs the tool. Everywhere else the accent is a hairline, a rail, a glyph, or a soft wash.</p>
+<p>Dark only. There is no light theme and there should not be one — the contrast with the host page is the point.</p>
+<!--CARD guidelines/colors-surfaces.html-->
+<!--CARD guidelines/colors-text.html-->
+<!--CARD guidelines/colors-accent.html-->
+<!--CARD guidelines/colors-accent-soft.html-->
+<!--CARD guidelines/colors-signals.html-->
+<!--CARD guidelines/colors-signal-grounds.html-->
+<!--CARD guidelines/colors-filetype.html-->
+<!--CARD guidelines/colors-node-roles.html-->
+<!--CARD guidelines/colors-node-tiers.html-->
+<!--CARD guidelines/colors-structure.html-->
+<h3>The rules behind the swatches</h3>
+<ul>
+<li>Surfaces step in order and are never skipped. Need more contrast? Add a hairline, don't jump a step. <code>--bg-editor</code> is the code ground and matches the Monaco theme exactly.</li>
+<li><code>--fg-faint</code> is timestamps and hints. It is never body copy — at ≈3.5:1 on <code>--bg-1</code> that rule is doing real work.</li>
+<li>Signals mean status and never decorate. Red text on the plain panel ground is the anti-pattern; every signal has a wash to sit on.</li>
+<li>File type has five buckets — JS, HTML, CSS, Data, Document. Anything else stays grey; a sixth hue needs a sixth pane to justify it. Near relatives inherit: <code>.ts</code>→JS, <code>.scss</code>→CSS, <code>.svg</code>→HTML, <code>.csv</code>/<code>.xlsx</code>→Data.</li>
+<li>Node glyphs have two tiers. The bare token is the <em>resting</em> state, because rest is what the whole list does. You opt into brightness with <code>-active</code> via <code>.is-called-out</code>, and only for a row that is doing something.</li>
+</ul>
+</section>
+
+<hr>
+<section id="type">
+<div class="eyebrow">Foundations</div><h2>Type</h2>
+<p class="lede">Two families; <strong>nothing is downloaded</strong>, which is what lets a tool be a single copyable file. <code>--sans: "Segoe UI"</code> for prose and UI labels — every machine that runs these tools has it, so it is referenced, never shipped. <code>--mono: "Cascadia Code", "Consolas", "SF Mono", Menlo, monospace</code> for anything a machine produced or will consume.</p>
+<!--CARD guidelines/type-rule.html-->
+<!--CARD guidelines/type-sans.html-->
+<!--CARD guidelines/type-mono.html-->
+<p style="margin-top:14px">Panel and group titles are uppercase, 10px (9.5px in L2), 700, <code>.14em</code>, <code>--fg-dim</code>. Always — and never for anything longer than three words.</p>
+<div class="note accent" style="margin-top:14px"><div class="t">Ligatures are on</div><p>Cascadia Code's coding ligatures — <code>=&gt; !== &lt;= -&gt; ::</code> — are contextual alternates, on by default but silently dropped by <code>input</code>, <code>textarea</code> and <code>select</code>, and switchable off by a host page. The system states it: <code>--mono-ligatures</code> / <code>--mono-features</code>, applied by <code>base.css</code> and, for a web part that cannot ship it, by <code>dcs-additions.css</code> § 6 on <code>.dcs-app</code> / <code>.dcs-tool</code> and their descendants. Those selectors carry real specificity on purpose — the <code>font:</code> shorthand resets <code>font-variant-*</code>, so a <code>:where()</code> rule loses to every <code>font: var(--t-*)</code> in the sheet. Use <code>.dcs-liga</code> to opt in outside a shell, <code>.dcs-liga-off</code> where a ligature is wrong — a character-by-character diff.</p></div>
+</section>
+
+<hr>
+<section id="space">
+<div class="eyebrow">Foundations</div><h2>Space, shape, elevation</h2>
+<p class="lede">A 2px base, but only these values ship: <strong>2 · 4 · 6 · 8 · 10 · 12 · 14 · 16 · 20 · 24</strong>. Gutters between panes are always <strong>5px</strong> — that is the splitter track, a control, not a spacing step.</p>
+<!--CARD guidelines/space-scale.html-->
+<!--CARD guidelines/space-radius.html-->
+<!--CARD guidelines/space-density.html-->
+<!--CARD guidelines/space-elevation.html-->
+<h3>Cards, borders, hover, press, focus</h3>
+<p>A "card" here is a panel: flat <code>--bg-1</code>, a 1px opaque <code>--border</code> hairline, radius 4 (6 for a shell, menu or dialog), <strong>no shadow</strong>, no gradient, no coloured left border. Hairlines are opaque — never <code>rgba</code> — so they read identically over every surface step. Interactive edges step up to <code>--border-strong</code>.</p>
+<p><strong>Hover changes colour, never size.</strong> No transform, no shadow, no border-width change — nothing that shifts layout. Row tools fade in with <code>opacity</code>, not <code>visibility</code>, so they stay clickable and testable. Selected rows keep a resting state (accent rail + chrome ground) so selection survives losing hover. Press is the same wash one step darker; there is no scale-down. Focus is <code>:focus-visible</code> only — <code>--accent-soft-line</code> outline plus a 2px <code>--accent-ring</code> wash. Mouse clicks never light a ring.</p>
+<h3>Backgrounds and imagery</h3>
+<p>No images, no gradients, no textures, no blur. Depth comes from four flat greys, hairlines, and the one shadow. The only patterned surface in the system is the L2 canvas stage: a 24px hairline lattice, so an artboard's real edges read against the dark ground. Transparency appears in exactly four places — the shadow, the dialog backdrop, the skeleton shimmer, and disabled opacity. <strong>There is no photography and no illustration anywhere in this system, including in empty states, deliberately.</strong></p>
+</section>
+
+<hr>
+<section id="motion">
+<div class="eyebrow">Foundations</div><h2>Motion</h2>
+<p class="lede">Four beats, nothing outside them, because motion in a developer tool is feedback rather than personality. Easing is <code>cubic-bezier(.35, 0, .25, 1)</code>.</p>
+<!--CARD guidelines/motion-beats.html-->
+<!--CARD guidelines/motion-pending.html-->
+<!--CARD guidelines/motion-rules.html-->
+</section>
+
+<hr>
+<section id="icons">
+<div class="eyebrow">Foundations</div><h2>Icons &amp; brand</h2>
+<p class="lede"><strong>There is no icon package.</strong> Tools get copied around and inlined; a CDN icon font would drift or break. So icons are inline SVG and consistency comes from one hard rule instead of one library.</p>
+<!--CARD guidelines/icon-geometry.html-->
+<ul style="margin-top:16px">
+<li><strong>Copy from DCSPad first, <a href="https://lucide.dev">Lucide</a> second, draw third.</strong> Paste Lucide SVG as-is — keep its <code>viewBox="0 0 24 24"</code> and <code>stroke-width="2"</code>, set width/height to 15–16, delete the class attributes. Do not install the package; do not fetch from a CDN.</li>
+<li><strong>No emoji. Ever.</strong> Emoji folder icons are exactly what the node glyph system replaced. No filled glyph among the line ones either — the exceptions are the solid play triangle on the Run verb, <code>PinGlyph</code>, and the six-dot <code>DragGlyph</code>.</li>
+<li><strong>One gear, and it is Lucide's.</strong> <code>&lt;Icon name="settings" /&gt;</code> is the single gear; <code>advanced</code> is an alias of it. Two shapes for one idea is the drift this rule prevents.</li>
+<li><strong>Microsoft product marks are not system glyphs.</strong> <code>&lt;ProductGlyph name="copilot" | "sharepoint" /&gt;</code> holds the two that remain — trademarks, used only where the control opens the product they name, never recoloured into the accent. The SharePoint mark in <code>Icon</code> is the one exception: it is drawn to the system's own rule.</li>
+<li>Three ways to ship the same shapes: <code>&lt;Icon name="…"&gt;</code> from the bundle, <code>assets/icons.svg</code> as a <code>&lt;symbol&gt;</code> sprite, or <code>assets/icons.js</code> — the same sprite, self-injecting, for pages that cannot reference an external <code>&lt;use&gt;</code> target.</li>
+</ul>
+<h3>Brand marks</h3>
+<p>No logo file exists and none was drawn. Identity is a letter on a 4 × 5 pixel grid inside a tinted tile, the 2×2 instrument mark for L2, and the split-weight mono wordmark. Anywhere a logo would go, set the tool's name in the mono wordmark.</p>
+<!--CARD guidelines/brand-marks.html-->
+<!--CARD guidelines/brand-instrument.html-->
+</section>
+
+<hr>
+<section id="components">
+<div class="eyebrow">Build</div><h2>Components</h2>
+<p class="lede">Every primitive, live. Read them as the reference rendering — if your tool's control does not look like this, yours is wrong.</p>
+<!--CARD components/controls/controls.card.html-->
+<!--CARD components/forms/forms.card.html-->
+<!--CARD components/navigation/navigation.card.html-->
+<!--CARD components/data/data.card.html-->
+<!--CARD components/feedback/feedback.card.html-->
+<!--CARD components/overlay/overlay.card.html-->
+<!--CARD components/shell/shell.card.html-->
+<!--CARD components/identity/identity.card.html-->
+<h3>The inventory</h3>
+<div class="inv">
+<div class="g"><div class="h">controls</div><div class="l">Button · IconButton · Segmented · Microbar · MicrobarValue</div></div>
+<div class="g"><div class="h">forms</div><div class="l">Field · Input · Textarea · Select · Toggle · Check · Slider · Swatches · ResizeRail</div></div>
+<div class="g"><div class="h">navigation</div><div class="l">Tabs · Crumbs · Rail · RailLabel · RailItem · RailSep</div></div>
+<div class="g"><div class="h">data</div><div class="l">DataGrid · ListRow · NodeRow · NodeGlyph · NodeRoles · Tree · TreeNode</div></div>
+<div class="g"><div class="h">feedback</div><div class="l">Badge · Chip · CountPill · Kbd · Notice · Toast · State · Skeleton · ScanBar</div></div>
+<div class="g"><div class="h">overlay</div><div class="l">Menu · MenuLabel · MenuItem · MenuSep · Dialog · TipHost</div></div>
+<div class="g"><div class="h">shell</div><div class="l">AppShell · ToolShell · Panel · PanelTitle · Controls · ControlGroup · ControlRow · Canvas · Splitter</div></div>
+<div class="g"><div class="h">identity</div><div class="l">Icon · PlayGlyph · PinGlyph · DragGlyph · Mark · InstrumentMark · Wordmark</div></div>
+</div>
+<p style="margin-top:12px">Only capitalised exports reach the global namespace. <code>roleForFile</code> is a function, not a component — reach it as <code>NodeRoles.forFile(name)</code>.</p>
+<pre><span class="c">// React, via the compiled bundle</span>
+const { Button, Icon } = window.DCSWorkbenchDesignSystem_dafd54;
+
+<span class="c">// or plain HTML, via the sheet</span>
+&lt;button class="dcs-btn dcs-btn-primary"&gt;Run&lt;/button&gt;</pre>
+</section>
+
+<hr>
+<section id="templates">
+<div class="eyebrow">Build</div><h2>Templates</h2>
+<p>Three working shells. Copy the folder, keep the chrome, replace the content.</p>
+<table><tr><th>Template</th><th>Layer</th><th>What it gives you</th></tr>
+<tr><td class="mono"><a href="templates/dcspad/index.html">dcspad</a></td><td>L1</td><td>Three-pane takeover hosted under the SP suite bar — frameworks sidebar, editor tabs, preview and console.</td></tr>
+<tr><td class="mono"><a href="templates/sp-workbench/index.html">sp-workbench</a></td><td>L1</td><td>Grouped rail, breadcrumb page-shell header, data grids with the sorted-column spec.</td></tr>
+<tr><td class="mono"><a href="templates/compact-tool/index.html">compact-tool</a></td><td>L2</td><td>Single web part: <code>.dcs-tool</code> head, grouped control column, canvas with its own bar.</td></tr></table>
+</section>
+
+<hr>
+<section id="embedding">
+<div class="eyebrow">Build</div><h2>Embedding — living inside SharePoint without pretending to be it</h2>
+<h3>L1 · Takeover</h3>
+<p>The suite bar <strong>stays visible</strong>. That is deliberate: it says "this is running on your SharePoint, under your account." It is desaturated while the tool runs so it never competes. The app pins itself at <code>inset: 53px 5px 5px</code> and paints the surround itself with <code>box-shadow: 0 0 0 100vmax</code> — SP wrappers behind the gap have white backgrounds you cannot chase class-by-class. No outline on the app: the 5px gap and the 6px radius do that work.</p>
+<div class="note accent" style="margin-top:12px"><div class="t">Always ship a suspend path</div><p>When the host page enters edit mode, hide the tool and revert the global <code>html</code>/<code>body</code> overrides — or the editor canvas goes dark and unscrollable.</p></div>
+<h3>L2 · In a web part</h3>
+<p>Scope every rule. Never set <code>html</code>, <code>body</code>, or bare element selectors — the host page owns those, and a stray <code>body { overflow: hidden }</code> makes the whole page unscrollable. Declare tokens on the tool root, not <code>:root</code>: <code>.dcs-tool { --accent: … }</code>. That also lets two tools coexist on one page. Set an explicit min-height so the canvas doesn't collapse before content arrives, and stack the controls above the canvas below 720px.</p>
+<p><code>base.css</code> is for L1 takeover pages, the specimen cards, and the templates. <strong>An L2 web part imports <code>tokens/*.css</code> + <code>dcs-workbench.css</code> (+ <code>dcs-additions.css</code>) only.</strong></p>
+</section>
+
+<hr>
+<section id="voice">
+<div class="eyebrow">Practice</div><h2>Copy voice</h2>
+<p class="lede">A good engineer explaining a thing once, precisely, and then stopping.</p>
+<ul>
+<li><strong>Sentence case everywhere</strong> except panel/group titles and chip labels, which are uppercase with tracking. Never title case.</li>
+<li><strong>Second person, implied.</strong> "Enter an absolute https:// URL on this tenant." Not "Please enter…", not "The user must enter…". No "we".</li>
+<li><strong>Say the system state, not a feeling.</strong> "403 — the request digest expired. Retrying once." Not "Oops! Something went wrong."</li>
+<li><strong>Lead with the machine fact.</strong> Error strings start with the code: <code>404 — that list does not exist on this web</code>.</li>
+<li><strong>Empty states are one centred monospace line</strong> saying what would appear here and how to make it appear. No illustration, no mascot, no call-to-action card.</li>
+<li><strong>Notices name the specific object.</strong> "This folder already contains a file with that name." "Uploaded to /Code/tools/dcspad · v2.0."</li>
+<li><strong>Truncation and caps are disclosed</strong>, never silent: "Results are capped at 100 — a nextLink is available."</li>
+<li><strong>Buttons are verbs</strong>, one or two words: Run, Generate, Inspect, Export JS, Save snippet. The primary button names the thing it produces.</li>
+<li><strong>Units and paths inline, in mono</strong>, in the sentence: <code>243.9 KB · 2026-07-31</code>.</li>
+<li><strong>No exclamation marks, no emoji, no jokes in UI copy.</strong> Wit belongs in documentation, not in a status bar.</li>
+<li><strong>Keyboard convention stated once and honoured everywhere:</strong> <code>Ctrl/Cmd + Enter</code> always runs; <code>Esc</code> always steps back one level. Never bind a plain letter key.</li>
+</ul>
+</section>
+
+<hr>
+<section id="dodont">
+<div class="eyebrow">Practice</div><h2>Do / don't</h2>
+<table><tr><th>Topic</th><th>Do</th><th>Don't</th></tr>
+<tr><td class="mono">Accent budget</td><td class="y">One solid accent fill per screen — the Run / Generate / Upload verb. Everything else accented uses rail, hairline, soft wash, or glyph.</td><td class="n">Two filled accent buttons in the same view. If both matter, the secondary becomes <code>.dcs-btn-soft</code>.</td></tr>
+<tr><td class="mono">Surfaces</td><td class="y">Step bg-0 → bg-1 → bg-2 in order, separated by a 1px hairline.</td><td class="n">Invent a fifth grey, or use a shadow to separate two panels. Shadow means floating, not adjacent.</td></tr>
+<tr><td class="mono">Density</td><td class="y">Match the tier to the container: 28 topbar · 26 default · 22 panel head · 20 only inside an already-tight strip.</td><td class="n">Mix tiers in one row, or reach for 20px because a layout is crowded. A crowded layout is a layout problem.</td></tr>
+<tr><td class="mono">Labels</td><td class="y">Panel and group titles uppercase, 10px, 700, .14em, <code>--fg-dim</code>. Always.</td><td class="n">Sentence-case panel titles, or uppercase for anything longer than three words.</td></tr>
+<tr><td class="mono">Numbers and paths</td><td class="y">Monospace, right-aligned when they are quantities, copyable when they are identifiers.</td><td class="n">Set a GUID, size or server-relative path in the sans stack. It stops being scannable.</td></tr>
+<tr><td class="mono">Empty states</td><td class="y">One centred monospace line stating what would appear here and how to make it appear.</td><td class="n">An illustration, a mascot, or a call-to-action card.</td></tr>
+<tr><td class="mono">Errors</td><td class="y">Error text on <code>--error-bg</code> with an <code>--error</code> inset rail. The count pill on the tab tells you where.</td><td class="n">A modal for a recoverable error, or red text on the plain panel ground with no wash behind it.</td></tr>
+<tr><td class="mono">Icons</td><td class="y">16-grid, 1.4 stroke, currentColor, round joins. DCSPad first, Lucide second.</td><td class="n">Emoji, a webfont, a CDN sprite, or a filled glyph among the line ones.</td></tr>
+<tr><td class="mono">Colour meaning</td><td class="y">Colour a row only when the colour answers a question the label does not.</td><td class="n">Rainbow a list for visual interest. Twelve hues in a sidebar is noise, not a taxonomy.</td></tr>
+<tr><td class="mono">Scoping in a web part</td><td class="y">Declare tokens on the tool root and prefix every selector.</td><td class="n">Touch <code>html</code>, <code>body</code>, or bare element selectors. You will break the host page for everyone.</td></tr></table>
+</section>
+
+<hr>
+<section id="upgrades">
+<div class="eyebrow">Practice</div><h2>Recommended upgrades</h2>
+<p>Changes to <strong>existing repos</strong> — DCSPad, SP Workbench, Halo — not to the system sheet. Everything they call for already exists in <code>dcs-workbench.css</code>; the work is adoption.</p>
+<table><tr><th>#</th><th>Change</th><th>Where</th><th>Effort</th></tr>
+<tr><td class="mono">01</td><td>Coloured node glyphs everywhere a file tree appears — the SharePoint files dialog, the Browser picker, SP Workbench's Files grid. One shared helper, one role/type lookup.</td><td class="mono">sp-files.js · workbench/files.js · app.css</td><td class="mono">Small</td></tr>
+<tr><td class="mono">02</td><td>Adopt the slider in Halo. <code>.dcs-slider</code> already ships; swap Halo's bespoke range rules for it.</td><td class="mono">Halo generator</td><td class="mono">Small</td></tr>
+<tr><td class="mono">03</td><td>Group labels on the SP Workbench rail — Site / Content / Tools. One array change.</td><td class="mono">workbench/shell.js</td><td class="mono">Small</td></tr>
+<tr><td class="mono">04</td><td>A page-shell header for SP Workbench views: persistent breadcrumb bar, then eyebrow + title + hint per view.</td><td class="mono">workbench/shell.js</td><td class="mono">Medium</td></tr>
+<tr><td class="mono">05</td><td>Data-grid spec — accent underline on the sorted column, right-aligned mono quantities, copyable identifiers, no zebra.</td><td class="mono">workbench.css .wb-table</td><td class="mono">Medium</td></tr>
+<tr><td class="mono">06</td><td>The <code>.dcs-tool</code> shell for compact tools, plus the control-group primitives.</td><td class="mono">dcs-workbench.css</td><td class="mono">Medium</td></tr>
+<tr><td class="mono">07</td><td>Skeleton loading for the Files and Lists grids, in the grid's own shape.</td><td class="mono">workbench/grid.js</td><td class="mono">Small</td></tr>
+<tr><td class="mono">08</td><td>Two more file-type triples — json/data and doc.</td><td class="mono">app.css :root</td><td class="mono">Trivial</td></tr>
+<tr><td class="mono">09</td><td>Named motion durations — <code>--dur-tint</code> / <code>-move</code> / <code>-beat</code>.</td><td class="mono">app.css :root</td><td class="mono">Trivial</td></tr></table>
+<p style="margin-top:12px">Items 03, 04 and 05 are applied in <code>templates/sp-workbench/</code>; 08 and 09 are already in this system's token files.</p>
+</section>
+
+<hr>
+<section id="caveats">
+<div class="eyebrow">Practice</div><h2>Caveats</h2>
+<ul>
+<li><strong>No logo file was provided and none was drawn.</strong> The letter marks are the 4 × 5 grid strings the source document specifies, rendered — they are the spec, not an interpretation.</li>
+<li><strong>One webfont, added on request.</strong> The system references installed fonts by design. <code>tokens/fonts.css</code> is the exception: the real Cascadia Code (variable, 200–700), SIL OFL 1.1. The <code>src</code> leads with <code>local("Cascadia Code")</code>, so an installed copy still wins and a pasted-elsewhere tool falls back to Consolas / SF Mono / Menlo exactly as before. Segoe UI is simply referenced — it is on every machine that runs these tools, so there is nothing to ship.</li>
+<li><strong><code>dcs-workbench.css</code> is the source sheet verbatim</strong>, minus its <code>:root</code> block, which moved to <code>tokens/*.css</code> so the compiler can index it. No value, name or rule was altered. <code>assets/dcs-workbench.standalone.css</code> is the untouched original.</li>
+<li><strong>The L2 comp inlines its own round-thumb slider</strong> (<code>.hslider</code>) which differs from <code>.dcs-slider</code> in the sheet. The kit uses the sheet's version, since that is the named component; flagged rather than reconciled.</li>
+<li><strong>Contrast, flagged not changed:</strong> <code>--fg-faint</code> on <code>--bg-1</code> measures ≈3.5:1 — under WCAG AA for body text, fine for the incidental use the system assigns it.</li>
+<li><strong>Open decisions from the 2026-08-02 audit</strong> — bare element selectors in the sheet vs the L2 scoping rule; the <code>.dcs-canvas-stage</code> comment saying 8px where it draws 24px; two ADDED accent tokens the verbatim sheet cannot adopt; no sprite symbols for the two filled glyphs; dialogs seating a 26px Cancel beside a 28px primary; <code>.dcs-chip</code> being <code>cursor: pointer</code> even when inert. None breaks anything today. Full text in <code>readme.md</code>.</li>
+</ul>
+</section>
+
+</main></div>
+<script>
+(function(){var links=[].slice.call(document.querySelectorAll('.rail a[href^="#"]'));var map={};links.forEach(function(a){var s=document.getElementById(a.getAttribute('href').slice(1));if(s)map[s.id]=a;});
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});(map[e.target.id]||{classList:{add:function(){}}}).classList.add('on');}});},{rootMargin:'0px 0px -75% 0px'});
+Object.keys(map).forEach(function(id){io.observe(document.getElementById(id))});})();
+</script>
+</body></html>

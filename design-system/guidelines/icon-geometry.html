@@ -1,0 +1,37 @@
+<!-- @dsCard group="Brand" viewport="700x230" subtitle="16 grid at stroke 1.4, or 24 grid at stroke 2 — the two mix cleanly" name="Icon geometry" -->
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<script src="../assets/icons.js"></script>
+<style>body{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg)}
+.wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);margin-bottom:10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.t{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 10px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);color:var(--fg-dim)}
+.t b{font:8.5px/1.2 var(--mono);color:var(--fg-faint);font-weight:500}
+.note{font:11px/1.55 var(--sans);color:var(--fg-faint);text-wrap:pretty;margin-top:12px}
+code{font:11px/1.4 var(--mono);color:var(--accent-soft-fg)}
+</style></head><body>
+<div class="wrap">
+<div>
+<div class="lbl">16 grid · stroke 1.4</div>
+<div class="row">
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-search"></use></svg><b>search</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-refresh"></use></svg><b>refresh</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-code"></use></svg><b>code</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-wrap"></use></svg><b>wrap</b></span>
+</div>
+<div class="note">DCSPad's own shapes, hand-built on the 16 grid and not worth redrawing — copy from the app first.</div>
+</div>
+<div>
+<div class="lbl">24 grid · stroke 2</div>
+<div class="row">
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-folder"></use></svg><b>folder</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-file"></use></svg><b>file</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-trash"></use></svg><b>trash</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-settings"></use></svg><b>settings</b></span>
+</div>
+<div class="note">Lucide, pasted as-is. At 16px a stroke-2 24-grid glyph renders a 1.33px line, which sits right beside the 16-grid's 1.4 — so the two mix in one row without looking mismatched.</div>
+</div>
+</div>
+<div class="note" style="margin-top:14px"><code>fill="none" stroke="currentColor"</code>, round cap and join, always <code>aria-hidden</code>. Colour comes from the parent — never hard-code a hex on a glyph. Copy from DCSPad first, <a href="https://lucide.dev">Lucide</a> second, draw third. No package, no CDN. <strong style="color:var(--fg-row);font-weight:600">The full named set lives on the Identity component card</strong> — this card is the rule, not the inventory.</div>
+</body></html>

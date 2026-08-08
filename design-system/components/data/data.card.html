@@ -1,0 +1,54 @@
+<!-- @dsCard group="Components" viewport="700x390" name="Data" subtitle="Grid with a sorted column, node rows in both tiers, list rows, the inspector tree" -->
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;padding:14px;background:var(--bg-0);color:var(--fg);font:var(--t-body)}
+.rw{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}
+.cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint)}
+.col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.gr{display:grid;gap:12px}</style></head><body><div id="root"></div>
+<script type="text/babel">
+const { DataGrid, NodeRow, ListRow, Tree, Check } = window.DCSWorkbenchDesignSystem_dafd54;
+
+function Card() {
+  const rows = [
+    { id:1, title:'Announcements', internal:'Announcements', items:'18' },
+    { id:2, title:'Documents', internal:'Shared Documents', items:'412', selected:true },
+    { id:3, title:'Site Pages', internal:'SitePages', items:'37' },
+    { id:4, title:'appdata', internal:'appdata', items:'4', dim:true },
+  ];
+  return (
+    <div className="gr">
+      <DataGrid columns={[{key:'title',label:'Title'},{key:'internal',label:'Internal name',mono:true},{key:'items',label:'Items',num:true}]}
+        rows={rows} sort={{key:'title',dir:'asc'}} onSort={() => {}} onOpenRow={() => {}} />
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
+        <div className="col"><span className="cl">node rows — rest, one called out</span>
+          <div style={{background:'var(--bg-1)',border:'1px solid var(--border)',borderRadius:4,padding:4}}>
+            <NodeRow node={{name:'Lateleir',kind:'folder',role:'user',meta:'folder'}} />
+            <NodeRow node={{name:'Forms',kind:'folder',role:'sys',meta:'system'}} />
+            <NodeRow node={{name:'Splash',kind:'folder',role:'open',meta:'open'}} calledOut />
+            <NodeRow node={{name:'dcspad.js',kind:'file',role:'js',meta:'65 B'}} />
+            <NodeRow node={{name:'Brief.pdf',kind:'file',role:'doc',meta:'44.3 KB'}} />
+          </div>
+        </div>
+        <div className="col"><span className="cl">list rows</span>
+          <div style={{background:'var(--bg-1)',border:'1px solid var(--border)',borderRadius:4,padding:4}}>
+            <ListRow lead={<Check />} name="Chart.js" meta="1.2 MB" />
+            <ListRow lead={<Check defaultChecked />} name="Fluent System Icons" on />
+            <ListRow lead={<Check />} name="DCS Standard Include" muted />
+          </div>
+        </div>
+        <div className="col"><span className="cl">inspector tree</span>
+          <div style={{background:'var(--bg-1)',border:'1px solid var(--border)',borderRadius:4,padding:'6px 10px'}}>
+            <Tree data={{ web: { Title:'New Nerve', Id:'539f90d3-a5f1…', ItemCount:128, Hidden:false } }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Card />);
+</script></body></html>

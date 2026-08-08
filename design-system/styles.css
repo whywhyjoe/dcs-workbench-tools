@@ -1,0 +1,12 @@
+/* DCS Workbench — global entry point. @import list only; link this one file.
+   An L2 web part links tokens/*.css + dcs-workbench.css (+ dcs-additions.css)
+   and skips base.css — see readme.md § Embedding. */
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/fonts.css";
+@import "./tokens/spacing.css";
+@import "./tokens/motion.css";
+@import "./tokens/elevation.css";
+@import "./base.css";
+@import "./dcs-workbench.css";
+@import "./dcs-additions.css";

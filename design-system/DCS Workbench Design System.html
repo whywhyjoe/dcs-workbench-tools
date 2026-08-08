@@ -1,0 +1,936 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>DCS Workbench Design System · Guide</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<script src="assets/icons.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds_bundle.js"></script>
+<style>
+html{scroll-behavior:smooth}body{margin:0;background:var(--bg-0);color:var(--fg);font:var(--t-body);-webkit-font-smoothing:antialiased}
+a{color:var(--accent-soft-fg);text-decoration:none;border-bottom:1px solid transparent}a:hover{color:var(--accent);border-bottom-color:var(--accent-soft-line)}
+.page{display:grid;grid-template-columns:236px minmax(0,1fr);gap:0;max-width:1240px;margin:0 auto}
+/* rail */
+.rail{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;border-right:1px solid var(--border);background:var(--bg-0);padding:22px 0 40px}
+.rail-mark{display:flex;align-items:center;gap:10px;padding:0 18px 18px}
+.rail-mark .wm{font:700 15px/1 var(--mono);letter-spacing:.02em;color:var(--fg-strong)}
+.rail-mark .wm i{font-style:normal;font-weight:300;color:var(--fg-dim)}
+.rail-grp{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-ghost);padding:16px 18px 7px}
+.rail a{display:block;padding:5px 18px;font:500 12.5px/1.4 var(--sans);color:var(--fg-dim);border-left:2px solid transparent;border-bottom:0}
+.rail a:hover{color:var(--fg-row);background:var(--bg-1)}
+.rail a.on{color:var(--accent-soft-fg);border-left-color:var(--accent);background:var(--accent-soft)}
+.rail .ver{padding:14px 18px 0;font:400 10.5px/1.5 var(--mono);color:var(--fg-ghost)}
+/* content */
+main{padding:0 40px 120px;min-width:0}
+section{padding-top:56px;scroll-margin-top:0}
+h1{font:600 26px/1.2 var(--sans);color:var(--fg-strong);margin:0 0 10px}
+h2{font:600 17px/1.25 var(--sans);color:var(--fg-strong);margin:0 0 6px}
+h3{font:600 15px/1.3 var(--sans);color:var(--fg-row);margin:22px 0 6px}
+.eyebrow{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);margin-bottom:9px}
+p{font:400 13px/1.65 var(--sans);color:var(--fg-dim);margin:0 0 10px;max-width:74ch;text-wrap:pretty}
+p.lede{font-size:14px;color:var(--fg-row)}
+strong{color:var(--fg-row);font-weight:600}em{color:var(--fg-row);font-style:italic}
+code{font:400 12px/1.4 var(--mono);color:var(--accent-soft-fg)}
+ul{margin:0 0 12px;padding-left:17px;max-width:74ch}li{font:400 13px/1.65 var(--sans);color:var(--fg-dim);margin-bottom:5px;text-wrap:pretty}
+hr{border:0;border-top:1px solid var(--border);margin:34px 0 0}
+.head{border-bottom:1px solid var(--border);padding-bottom:16px}
+/* masthead */
+.mast{display:flex;gap:18px;align-items:center;padding:44px 0 0}
+.mast .tile{width:60px;height:60px;flex:none;border-radius:6px;background:var(--accent-soft);border:1px solid var(--accent-soft-line);display:grid;place-items:center}
+.mast h1{margin:0}
+.mast .sub{font:400 13px/1.5 var(--sans);color:var(--fg-dim);margin-top:4px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:20px;padding:0 8px;border-radius:999px;background:var(--bg-2);border:1px solid var(--border);font:500 10px/1 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--fg-faint)}
+.pills{display:flex;gap:6px;margin-top:10px}
+/* specimen card */
+figure.spec{margin:16px 0 0;border:1px solid var(--border);border-radius:var(--radius-l);background:var(--bg-1);overflow:hidden}
+figure.spec>figcaption{display:block;padding:9px 12px;background:var(--bg-2);border-bottom:1px solid var(--border)}
+figure.spec>figcaption .n{font:600 12.5px/1.5 var(--sans);color:var(--fg-strong);margin-right:9px}
+figure.spec>figcaption .s{font:400 11.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty}
+figure.spec>.body{display:block;overflow-x:auto;overscroll-behavior-x:contain}
+figure.spec>.body>.pane{min-width:648px}
+/* prose blocks */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.note{border:1px solid var(--border);border-radius:var(--radius-m);background:var(--bg-1);padding:13px 14px}
+.note .t{font:600 12.5px/1.3 var(--sans);color:var(--fg-strong);margin-bottom:5px}
+.note p{margin:0;font-size:12.5px}
+.note.accent{background:var(--accent-soft);border-color:var(--accent-soft-line)}
+.note.accent .t{color:var(--accent-soft-fg)}.note.accent p{color:var(--fg-row)}
+table{border-collapse:collapse;width:100%;margin:14px 0 4px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m)}
+th{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg-2)}
+td{font:400 12.5px/1.55 var(--sans);color:var(--fg-dim);padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;text-wrap:pretty}
+tr:last-child td{border-bottom:0}
+td.y{color:var(--ok)}td.n{color:var(--error)}
+.mono{font-family:var(--mono);font-size:12px;color:var(--fg-row)}
+pre{margin:12px 0;padding:12px 14px;background:var(--bg-editor);border:1px solid var(--border);border-radius:var(--radius-m);overflow:auto;font:400 12px/1.6 var(--mono);color:var(--fg-row)}
+pre .c{color:var(--fg-ghost)}
+.inv{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:14px}
+.inv .g{border:1px solid var(--border);border-radius:var(--radius-m);background:var(--bg-1);padding:10px 12px}
+.inv .g .h{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);margin-bottom:6px}
+.inv .g .l{font:400 11.5px/1.7 var(--mono);color:var(--fg-row);word-break:break-word}
+@media (max-width:900px){.page{grid-template-columns:1fr}.rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}main{padding:0 20px 80px}.grid2{grid-template-columns:1fr}}
+/* ligatures: every rule above that sets the `font:` shorthand resets them, so restate on the same selectors */
+body,.rail a,.rail-mark .wm,.rail .ver,.rail-grp,h1,h2,h3,p,li,td,th,code,pre,.mono,.eyebrow,.pill,.mast .sub,.note .t,.inv .g .h,.inv .g .l,figure.spec>figcaption .n,figure.spec>figcaption .s{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+<style id="specimens">
+/* guidelines/colors-surfaces.html */
+#c-colors-surfaces{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-surfaces .g{display:grid;gap:10px}#c-colors-surfaces .r{display:flex;gap:10px;flex-wrap:wrap;align-items:center}#c-colors-surfaces .sw{flex:1 1 0;min-width:0;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);overflow:hidden}#c-colors-surfaces .sw .chip{height:34px}#c-colors-surfaces .sw .m{padding:7px 9px}#c-colors-surfaces .sw .n{font:500 11px/1.3 var(--mono);color:var(--fg-row);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-surfaces .sw .h{font:400 10px/1.3 var(--mono);color:var(--fg-faint);margin-top:2px;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-surfaces .sw .u{font:400 10.5px/1.4 var(--sans);color:var(--fg-dim);margin-top:5px;text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-surfaces .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-colors-surfaces,#c-colors-surfaces *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/colors-text.html */
+#c-colors-text{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-text .g{display:grid;gap:10px}#c-colors-text .r{display:flex;gap:10px;flex-wrap:wrap;align-items:center}#c-colors-text .sw{flex:1 1 0;min-width:0;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);overflow:hidden}#c-colors-text .sw .chip{height:34px}#c-colors-text .sw .m{padding:7px 9px}#c-colors-text .sw .n{font:500 11px/1.3 var(--mono);color:var(--fg-row);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-text .sw .h{font:400 10px/1.3 var(--mono);color:var(--fg-faint);margin-top:2px;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-text .sw .u{font:400 10.5px/1.4 var(--sans);color:var(--fg-dim);margin-top:5px;text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-text .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-colors-text,#c-colors-text *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/colors-accent.html */
+#c-colors-accent{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-accent .g{display:grid;gap:10px}#c-colors-accent .r{display:flex;gap:10px;flex-wrap:wrap;align-items:center}#c-colors-accent .sw{flex:1 1 0;min-width:0;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);overflow:hidden}#c-colors-accent .sw .chip{height:34px}#c-colors-accent .sw .m{padding:7px 9px}#c-colors-accent .sw .n{font:500 11px/1.3 var(--mono);color:var(--fg-row);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-accent .sw .h{font:400 10px/1.3 var(--mono);color:var(--fg-faint);margin-top:2px;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-accent .sw .u{font:400 10.5px/1.4 var(--sans);color:var(--fg-dim);margin-top:5px;text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-accent .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-colors-accent,#c-colors-accent *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/colors-accent-soft.html */
+#c-colors-accent-soft{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-accent-soft .g{display:grid;gap:10px}#c-colors-accent-soft .r{display:flex;gap:10px;flex-wrap:wrap;align-items:center}#c-colors-accent-soft .sw{flex:1 1 0;min-width:0;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);overflow:hidden}#c-colors-accent-soft .sw .chip{height:34px}#c-colors-accent-soft .sw .m{padding:7px 9px}#c-colors-accent-soft .sw .n{font:500 11px/1.3 var(--mono);color:var(--fg-row);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-accent-soft .sw .h{font:400 10px/1.3 var(--mono);color:var(--fg-faint);margin-top:2px;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-accent-soft .sw .u{font:400 10.5px/1.4 var(--sans);color:var(--fg-dim);margin-top:5px;text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-accent-soft .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-colors-accent-soft,#c-colors-accent-soft *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/colors-signals.html */
+#c-colors-signals{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-signals .g{display:grid;gap:10px}#c-colors-signals .r{display:flex;gap:10px;flex-wrap:wrap;align-items:center}#c-colors-signals .sw{flex:1 1 0;min-width:0;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);overflow:hidden}#c-colors-signals .sw .chip{height:34px}#c-colors-signals .sw .m{padding:7px 9px}#c-colors-signals .sw .n{font:500 11px/1.3 var(--mono);color:var(--fg-row);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-signals .sw .h{font:400 10px/1.3 var(--mono);color:var(--fg-faint);margin-top:2px;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-signals .sw .u{font:400 10.5px/1.4 var(--sans);color:var(--fg-dim);margin-top:5px;text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-signals .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-colors-signals,#c-colors-signals *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/colors-signal-grounds.html */
+#c-colors-signal-grounds{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-signal-grounds .g{display:grid;gap:10px}#c-colors-signal-grounds .r{display:flex;gap:10px;flex-wrap:wrap;align-items:center}#c-colors-signal-grounds .sw{flex:1 1 0;min-width:0;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);overflow:hidden}#c-colors-signal-grounds .sw .chip{height:34px}#c-colors-signal-grounds .sw .m{padding:7px 9px}#c-colors-signal-grounds .sw .n{font:500 11px/1.3 var(--mono);color:var(--fg-row);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-signal-grounds .sw .h{font:400 10px/1.3 var(--mono);color:var(--fg-faint);margin-top:2px;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-signal-grounds .sw .u{font:400 10.5px/1.4 var(--sans);color:var(--fg-dim);margin-top:5px;text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-signal-grounds .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-colors-signal-grounds,#c-colors-signal-grounds *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/colors-filetype.html */
+#c-colors-filetype{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-filetype .g{display:grid;gap:10px}#c-colors-filetype .r{display:flex;gap:10px;flex-wrap:wrap;align-items:center}#c-colors-filetype .sw{flex:1 1 0;min-width:0;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);overflow:hidden}#c-colors-filetype .sw .chip{height:34px}#c-colors-filetype .sw .m{padding:7px 9px}#c-colors-filetype .sw .n{font:500 11px/1.3 var(--mono);color:var(--fg-row);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-filetype .sw .h{font:400 10px/1.3 var(--mono);color:var(--fg-faint);margin-top:2px;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-filetype .sw .u{font:400 10.5px/1.4 var(--sans);color:var(--fg-dim);margin-top:5px;text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-filetype .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-colors-filetype,#c-colors-filetype *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/colors-node-roles.html */
+#c-colors-node-roles{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-node-roles .g{display:grid;gap:10px}#c-colors-node-roles .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-colors-node-roles .spec{flex:none;width:112px;font:500 10.5px/1.4 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-node-roles .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-node-roles .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-colors-node-roles,#c-colors-node-roles *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/colors-node-tiers.html */
+#c-colors-node-tiers{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-node-tiers .g{display:grid;gap:10px}#c-colors-node-tiers .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-colors-node-tiers .spec{flex:none;width:112px;font:500 10.5px/1.4 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-node-tiers .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-node-tiers .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-colors-node-tiers,#c-colors-node-tiers *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/colors-structure.html */
+#c-colors-structure{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-structure .g{display:grid;gap:10px}#c-colors-structure .r{display:flex;gap:10px;flex-wrap:wrap;align-items:center}#c-colors-structure .sw{flex:1 1 0;min-width:0;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);overflow:hidden}#c-colors-structure .sw .chip{height:34px}#c-colors-structure .sw .m{padding:7px 9px}#c-colors-structure .sw .n{font:500 11px/1.3 var(--mono);color:var(--fg-row);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-structure .sw .h{font:400 10px/1.3 var(--mono);color:var(--fg-faint);margin-top:2px;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-structure .sw .u{font:400 10.5px/1.4 var(--sans);color:var(--fg-dim);margin-top:5px;text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-colors-structure .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-colors-structure,#c-colors-structure *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/type-rule.html */
+#c-type-rule{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-type-rule .g{display:grid;gap:10px}#c-type-rule .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-type-rule .spec{flex:none;width:112px;font:500 10.5px/1.4 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-type-rule .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-type-rule .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-type-rule,#c-type-rule *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/type-sans.html */
+#c-type-sans{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-type-sans .g{display:grid;gap:10px}#c-type-sans .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-type-sans .spec{flex:none;width:112px;font:500 10.5px/1.4 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-type-sans .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-type-sans .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-type-sans,#c-type-sans *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/type-mono.html */
+#c-type-mono{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-type-mono .g{display:grid;gap:10px}#c-type-mono .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-type-mono .spec{flex:none;width:112px;font:500 10.5px/1.4 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-type-mono .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-type-mono .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-type-mono,#c-type-mono *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/space-scale.html */
+#c-space-scale{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-scale .g{display:grid;gap:10px}#c-space-scale .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-space-scale .spec{flex:none;width:112px;font:500 10.5px/1.4 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-scale .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-scale .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-space-scale,#c-space-scale *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/space-radius.html */
+#c-space-radius{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-radius .g{display:grid;gap:10px}#c-space-radius .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-space-radius .spec{flex:none;width:112px;font:500 10.5px/1.4 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-radius .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-radius .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-space-radius,#c-space-radius *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/space-density.html */
+#c-space-density{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-density .g{display:grid;gap:10px}#c-space-density .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-space-density .spec{flex:none;width:112px;font:500 10.5px/1.4 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-density .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-density .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-space-density,#c-space-density *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/space-elevation.html */
+#c-space-elevation{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-elevation .g{display:grid;gap:10px}#c-space-elevation .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-space-elevation .spec{flex:none;width:112px;font:500 10.5px/1.4 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-elevation .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-space-elevation .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-space-elevation,#c-space-elevation *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/motion-beats.html */
+#c-motion-beats{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-beats .g{display:grid;gap:10px}#c-motion-beats .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-motion-beats .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-beats .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-beats .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-beats .col{display:flex;flex-direction:column;gap:8px}
+
+#c-motion-beats,#c-motion-beats *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/motion-pending.html */
+#c-motion-pending{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-pending .g{display:grid;gap:10px}#c-motion-pending .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-motion-pending .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-pending .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-pending .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-pending .col{display:flex;flex-direction:column;gap:8px}
+
+#c-motion-pending,#c-motion-pending *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/motion-rules.html */
+#c-motion-rules{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-rules .g{display:grid;gap:10px}#c-motion-rules .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-motion-rules .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-rules .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-rules .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-motion-rules .col{display:flex;flex-direction:column;gap:8px}
+
+#c-motion-rules,#c-motion-rules *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/icon-geometry.html */
+#c-icon-geometry{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-icon-geometry .wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px}#c-icon-geometry .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);margin-bottom:10px;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-icon-geometry .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}#c-icon-geometry .t{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 10px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);color:var(--fg-dim)}#c-icon-geometry .t b{font:8.5px/1.2 var(--mono);color:var(--fg-faint);font-weight:500;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-icon-geometry .note{font:11px/1.55 var(--sans);color:var(--fg-faint);text-wrap:pretty;margin-top:12px;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-icon-geometry code{font:11px/1.4 var(--mono);color:var(--accent-soft-fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-icon-geometry,#c-icon-geometry *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/brand-marks.html */
+#c-brand-marks{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-brand-marks .g{display:grid;gap:10px}#c-brand-marks .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-brand-marks .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-brand-marks .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-brand-marks .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-brand-marks .col{display:flex;flex-direction:column;gap:8px}
+
+#c-brand-marks,#c-brand-marks *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* guidelines/brand-instrument.html */
+#c-brand-instrument{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-brand-instrument .g{display:grid;gap:10px}#c-brand-instrument .r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}#c-brand-instrument .note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-brand-instrument .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-brand-instrument .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-brand-instrument .col{display:flex;flex-direction:column;gap:8px}
+
+#c-brand-instrument,#c-brand-instrument *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* components/controls/controls.card.html */
+#c-controls{margin:0;padding:14px;background:var(--bg-0);color:var(--fg);font:var(--t-body);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-controls .rw{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}#c-controls .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-controls .col{display:flex;flex-direction:column;gap:8px;min-width:0}#c-controls .gr{display:grid;gap:12px}
+#c-controls,#c-controls *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* components/forms/forms.card.html */
+#c-forms{margin:0;padding:14px;background:var(--bg-0);color:var(--fg);font:var(--t-body);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-forms .rw{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}#c-forms .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-forms .col{display:flex;flex-direction:column;gap:8px;min-width:0}#c-forms .gr{display:grid;gap:12px}
+#c-forms,#c-forms *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* components/navigation/navigation.card.html */
+#c-navigation{margin:0;padding:14px;background:var(--bg-0);color:var(--fg);font:var(--t-body);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-navigation .rw{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}#c-navigation .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-navigation .col{display:flex;flex-direction:column;gap:8px;min-width:0}#c-navigation .gr{display:grid;gap:12px}
+#c-navigation,#c-navigation *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* components/data/data.card.html */
+#c-data{margin:0;padding:14px;background:var(--bg-0);color:var(--fg);font:var(--t-body);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-data .rw{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}#c-data .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-data .col{display:flex;flex-direction:column;gap:8px;min-width:0}#c-data .gr{display:grid;gap:12px}
+#c-data,#c-data *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* components/feedback/feedback.card.html */
+#c-feedback{margin:0;padding:14px;background:var(--bg-0);color:var(--fg);font:var(--t-body);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-feedback .rw{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}#c-feedback .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-feedback .col{display:flex;flex-direction:column;gap:8px;min-width:0}#c-feedback .gr{display:grid;gap:12px}
+#c-feedback,#c-feedback *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* components/overlay/overlay.card.html */
+#c-overlay{margin:0;padding:14px;background:var(--bg-0);color:var(--fg);font:var(--t-body);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-overlay .rw{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}#c-overlay .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-overlay .col{display:flex;flex-direction:column;gap:8px;min-width:0}#c-overlay .gr{display:grid;gap:12px}
+#c-overlay,#c-overlay *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* components/shell/shell.card.html */
+#c-shell{margin:0;padding:14px;background:var(--bg-0);color:var(--fg);font:var(--t-body);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-shell .rw{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}#c-shell .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-shell .col{display:flex;flex-direction:column;gap:8px;min-width:0}#c-shell .gr{display:grid;gap:12px}
+#c-shell,#c-shell *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+/* components/identity/identity.card.html */
+#c-identity{margin:0;padding:14px;background:var(--bg-0);color:var(--fg);font:var(--t-body);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-identity .grid{display:grid;grid-template-columns:repeat(11,1fr);gap:6px}#c-identity .tile{display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 2px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);color:var(--fg-dim)}#c-identity .tile span{font:8.5px/1.2 var(--mono);color:var(--fg-faint);text-align:center;word-break:break-word;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-identity .lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);margin:14px 0 8px;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}#c-identity .row{display:flex;gap:22px;flex-wrap:wrap;align-items:center}#c-identity .cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+
+#c-identity,#c-identity *{font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)}
+</style>
+<template id="__bundler_thumbnail" data-bg-color="#14161b">
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" fill="#14161b"/><rect x="30" y="24" width="60" height="72" rx="8" fill="#173c35" stroke="#3fd8b4" stroke-width="2"/><g fill="#3fd8b4"><rect x="42" y="36" width="9" height="9"/><rect x="55" y="36" width="9" height="9"/><rect x="68" y="36" width="9" height="9"/><rect x="42" y="49" width="9" height="9"/><rect x="68" y="49" width="9" height="9"/><rect x="42" y="62" width="9" height="9"/><rect x="68" y="62" width="9" height="9"/><rect x="42" y="75" width="9" height="9"/><rect x="55" y="75" width="9" height="9"/><rect x="68" y="75" width="9" height="9"/></g></svg>
+</template>
+</head><body>
+<div class="page">
+<nav class="rail">
+<div class="rail-mark"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="20" height="20" rx="5" fill="var(--accent-soft)" stroke="var(--accent-soft-line)"/><g fill="var(--accent)"><rect x="6" y="5" width="3" height="3"/><rect x="10" y="5" width="3" height="3"/><rect x="6" y="9" width="3" height="3"/><rect x="13" y="9" width="3" height="3"/><rect x="6" y="13" width="3" height="3"/><rect x="10" y="13" width="3" height="3"/></g></svg><span class="wm">DCS<i>Workbench</i></span></div>
+<div class="rail-grp">Start</div>
+<a href="#overview">Overview</a><a href="#use">How to use it</a><a href="#rules">Six rules</a><a href="#layers">Two layers</a>
+<div class="rail-grp">Foundations</div>
+<a href="#colour">Colour</a><a href="#type">Type</a><a href="#space">Space &amp; shape</a><a href="#motion">Motion</a><a href="#icons">Icons &amp; brand</a>
+<div class="rail-grp">Build</div>
+<a href="#components">Components</a><a href="#templates">Templates</a><a href="#embedding">Embedding</a>
+<div class="rail-grp">Practice</div>
+<a href="#voice">Copy voice</a><a href="#dodont">Do / don't</a><a href="#upgrades">Upgrades</a><a href="#caveats">Caveats</a>
+<div class="ver">v1.0 · dark only<br>2026-08-02</div>
+</nav>
+<main>
+
+<section id="overview" style="padding-top:0">
+<div class="mast"><div class="tile"><svg width="30" height="30" viewBox="0 0 22 22" aria-hidden="true"><g fill="var(--accent)"><rect x="4" y="3" width="3" height="3"/><rect x="8" y="3" width="3" height="3"/><rect x="12" y="3" width="3" height="3"/><rect x="4" y="7" width="3" height="3"/><rect x="15" y="7" width="3" height="3"/><rect x="4" y="11" width="3" height="3"/><rect x="15" y="11" width="3" height="3"/><rect x="4" y="15" width="3" height="3"/><rect x="8" y="15" width="3" height="3"/><rect x="12" y="15" width="3" height="3"/></g></svg></div>
+<div><h1>DCS Workbench Design System</h1><div class="sub">The design system for our internal developer tools — DCSPad, SP Workbench, Halo, and whatever comes next.</div>
+<div class="pills"><span class="pill">v1.0</span><span class="pill">dark only</span><span class="pill">no build step</span><span class="pill">no CDN</span></div></div></div>
+<p class="lede" style="margin-top:24px">It is deliberately <em>not</em> BMO and not SharePoint: when a page looks like this, you are inside a specialised instrument built by and for this team. End-user app UI stays in the BMO design system. This is the other thing.</p>
+<p>It is the DCSPad token set, codified — <strong>nothing in DCSPad is deprecated</strong>. Everything new is additive, and every recommended change to an existing repo is listed, with a reason, under <a href="#upgrades">Recommended upgrades</a>.</p>
+</section>
+
+<section id="use">
+<div class="eyebrow">Start</div><h2>How to use it</h2>
+<p>Three ways in, in order of how much of the system you want. Pick one — they do not mix well in the same file.</p>
+<div class="grid2">
+<div class="note"><div class="t">1 · Link the sheet</div><p>One stylesheet, every token and every <code>.dcs-*</code> class. For a repo-backed tool that can reference files.</p><pre style="margin:10px 0 0">&lt;link rel="stylesheet" href="styles.css"&gt;</pre></div>
+<div class="note"><div class="t">2 · Paste it inline</div><p>Copy <code>assets/dcs-workbench.standalone.css</code> into a <code>&lt;style&gt;</code> block. The tool stays a single file you can email, and still looks like family.</p></div>
+<div class="note"><div class="t">3 · Start from a template</div><p><code>templates/dcspad</code>, <code>templates/sp-workbench</code> (L1) or <code>templates/compact-tool</code> (L2) — real shells with the chrome already right. See <a href="#templates">Templates</a>.</p></div>
+<div class="note accent"><div class="t">The one contract</div><p>Tools get copied, inlined and edited in place. That is fine. <strong>Keep the token names</strong> even when you paste the values. A drifted teal is still family; a renamed <code>--brand-green</code> can never be swept back in.</p></div>
+</div>
+<h3>What is in the box</h3>
+<table><tr><th>Path</th><th>What it is</th></tr>
+<tr><td class="mono">styles.css</td><td>Global entry point — an <code>@import</code> list only. Link this one file.</td></tr>
+<tr><td class="mono">tokens/</td><td><code>colors</code> · <code>typography</code> · <code>fonts</code> · <code>spacing</code> · <code>motion</code> · <code>elevation</code></td></tr>
+<tr><td class="mono">base.css</td><td>Document resets, <code>:focus-visible</code>, selection. L1 pages and specimens only — <strong>not for web parts</strong>.</td></tr>
+<tr><td class="mono">dcs-workbench.css</td><td>The component sheet — every <code>.dcs-*</code> class, verbatim from the source.</td></tr>
+<tr><td class="mono">dcs-additions.css</td><td>The six things this compilation added, kept separate on purpose.</td></tr>
+<tr><td class="mono">assets/</td><td><code>icons.svg</code> sprite · <code>icons.js</code> (self-injecting) · letter marks · instrument mark · Cascadia Code · the untouched standalone sheet</td></tr>
+<tr><td class="mono">components/</td><td>React primitives, grouped by concern — a <code>.prompt.md</code> per component</td></tr>
+<tr><td class="mono">templates/</td><td>Starting points: <code>dcspad</code> (L1) · <code>sp-workbench</code> (L1) · <code>compact-tool</code> (L2)</td></tr></table>
+</section>
+
+<section id="rules">
+<div class="eyebrow">Start</div><h2>Six rules that make everything else fall out</h2>
+<ul>
+<li><strong>Sharper than its host.</strong> It lives inside corporate SharePoint. It should read as a precision instrument dropped onto that page — never as a themed SharePoint page, and never as a decorated one.</li>
+<li><strong>One accent, used once.</strong> Teal is structural: rails, hairlines, active states, glyphs. A solid accent fill appears exactly once per screen, on the verb that runs the thing.</li>
+<li><strong>Colour is information.</strong> Signals mean status. File type is a colour. Folder role is a colour. If a colour tells you nothing, the element is grey.</li>
+<li><strong>Hierarchy by surface, not shadow.</strong> Four greys stack: ground, panel, chrome, hover. Hairlines separate. One shadow exists and it means "floating above the app."</li>
+<li><strong>Mono means machine.</strong> Anything a machine produced or will consume — paths, GUIDs, sizes, statuses, code — is monospace. Everything a human wrote is sans.</li>
+<li><strong>Copy-safe by design.</strong> No build step, no CDN, no icon package. A tool can be a single HTML file with the tokens pasted inline and still be unmistakably part of the family.</li>
+</ul>
+</section>
+
+<section id="layers">
+<div class="eyebrow">Start</div><h2>Two layers, one vocabulary</h2>
+<p>Pick before you start. They differ in shell, not in tokens — a control that looks a certain way in one looks identical in the other.</p>
+<table><tr><th>&nbsp;</th><th>L1 · Workbench</th><th>L2 · Instrument</th></tr>
+<tr><td class="mono">What</td><td>Multi-pane instruments that take over the page. DCSPad, SP Workbench.</td><td>One job, one screen, inside a single web part in normal page flow.</td></tr>
+<tr><td class="mono">Shell</td><td><code>.dcs-app</code> — 40px topbar / 1fr work / 24px status</td><td><code>.dcs-tool</code> — 40px head / body, no status bar</td></tr>
+<tr><td class="mono">Seat</td><td>Fixed <code>inset: 53px 5px 5px</code>, radius 6, surround <code>#101216</code></td><td>In flow, own dark ground, 1px border, radius 6 — never full-bleed</td></tr>
+<tr><td class="mono">Has</td><td>Splitters, collapsible panes, status bar, keyboard shortcuts</td><td>Control column plus optional canvas; stacks below 720px</td></tr>
+<tr><td class="mono">Density</td><td>22–30px controls · 10px uppercase panel titles</td><td>26–28px controls · 9.5px uppercase group titles</td></tr>
+<tr><td class="mono">Identity</td><td>Gets a letter mark</td><td>No letter — the 2×2 instrument mark instead</td></tr></table>
+<p style="margin-top:12px">If an L2 tool grows a second working surface and a status bar, it has become L1. Give it a letter.</p>
+</section>
+
+<hr>
+<section id="colour">
+<div class="eyebrow">Foundations</div><h2>Colour</h2>
+<p class="lede">One accent hue and nothing else decorative. Solid <code>--accent</code> fill appears <strong>exactly once per screen</strong> — on the verb that runs the tool. Everywhere else the accent is a hairline, a rail, a glyph, or a soft wash.</p>
+<p>Dark only. There is no light theme and there should not be one — the contrast with the host page is the point.</p>
+<figure class="spec"><figcaption><span class="n">Surfaces</span><span class="s">Four steps, in order — never skip one to create contrast</span></figcaption><div class="body" id="c-colors-surfaces"><div class="pane"><div class="r">
+<div class="sw"><div class="chip" style="background:#14161b;display:grid;place-items:center;color:#14161b;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--bg-0</div><div class="h">#14161b</div><div class="u">App ground, gutters, splitter tracks, input wells</div></div></div>
+<div class="sw"><div class="chip" style="background:#1a1d23;display:grid;place-items:center;color:#1a1d23;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--bg-1</div><div class="h">#1a1d23</div><div class="u">Panel bodies, cards, sidebars</div></div></div>
+<div class="sw"><div class="chip" style="background:#20242c;display:grid;place-items:center;color:#20242c;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--bg-2</div><div class="h">#20242c</div><div class="u">Chrome: topbar, panel heads, tab strips, status bar</div></div></div>
+<div class="sw"><div class="chip" style="background:#2a2f3a;display:grid;place-items:center;color:#2a2f3a;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--bg-3</div><div class="h">#2a2f3a</div><div class="u">Hover, pressed, filled segment</div></div></div>
+</div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Text</span><span class="s">Seven steps. --fg-faint is hints and timestamps, never body copy</span></figcaption><div class="body" id="c-colors-text"><div class="pane"><div class="g">
+<div class="r">
+<div class="sw"><div class="chip" style="background:var(--bg-0);display:grid;place-items:center;color:#f2f5fa;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Aa</div><div class="m"><div class="n">--fg-strong</div><div class="h">#f2f5fa</div><div class="u">Hover, emphasis, selected-row text</div></div></div>
+<div class="sw"><div class="chip" style="background:var(--bg-0);display:grid;place-items:center;color:#e6e9ef;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Aa</div><div class="m"><div class="n">--fg</div><div class="h">#e6e9ef</div><div class="u">Primary text</div></div></div>
+<div class="sw"><div class="chip" style="background:var(--bg-0);display:grid;place-items:center;color:#d4d9e2;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Aa</div><div class="m"><div class="n">--fg-row</div><div class="h">#d4d9e2</div><div class="u">List &amp; menu rows at rest</div></div></div>
+<div class="sw"><div class="chip" style="background:var(--bg-0);display:grid;place-items:center;color:#a2a9b8;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Aa</div><div class="m"><div class="n">--fg-dim</div><div class="h">#a2a9b8</div><div class="u">Labels, inactive tabs, icon buttons at rest</div></div></div>
+</div><div class="r">
+<div class="sw"><div class="chip" style="background:var(--bg-0);display:grid;place-items:center;color:#8b93a3;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Aa</div><div class="m"><div class="n">--fg-mid</div><div class="h">#8b93a3</div><div class="u">Panel glyph strokes, secondary glyphs</div></div></div>
+<div class="sw"><div class="chip" style="background:var(--bg-0);display:grid;place-items:center;color:#6d7484;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Aa</div><div class="m"><div class="n">--fg-faint</div><div class="h">#6d7484</div><div class="u">Timestamps, hints, gutter numbers</div></div></div>
+<div class="sw"><div class="chip" style="background:var(--bg-0);display:grid;place-items:center;color:#4a5060;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Aa</div><div class="m"><div class="n">--fg-ghost</div><div class="h">#4a5060</div><div class="u">Splitter handles, disabled edges</div></div></div>
+<div class="sw" style="background:none;border:0"></div>
+</div></div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Accent</span><span class="s">One hue, six jobs — the solid fill appears once per screen</span></figcaption><div class="body" id="c-colors-accent"><div class="pane"><div class="g"><div class="r">
+<div class="sw"><div class="chip" style="background:#3fd8b4;display:grid;place-items:center;color:#3fd8b4;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--accent</div><div class="h">#3fd8b4</div><div class="u">Rails, active glyphs, the one solid fill</div></div></div>
+<div class="sw"><div class="chip" style="background:#5ee3c4;display:grid;place-items:center;color:#5ee3c4;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--accent-hi</div><div class="h">#5ee3c4</div><div class="u">Hover on the solid fill</div></div></div>
+<div class="sw"><div class="chip" style="background:#04241e;display:grid;place-items:center;color:#04241e;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--accent-ink</div><div class="h">#04241e</div><div class="u">Ink on solid accent</div></div></div>
+<div class="sw"><div class="chip" style="background:#58bfa8;display:grid;place-items:center;color:#58bfa8;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--accent-dim</div><div class="h">#58bfa8</div><div class="u">Quiet accent glyphs — the + add affordance</div></div></div>
+</div></div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Accent · soft</span><span class="s">The soft trio does everything the rationed fill cannot</span></figcaption><div class="body" id="c-colors-accent-soft"><div class="pane"><div class="r">
+<div class="sw"><div class="chip" style="background:#1e3b35;display:grid;place-items:center;color:#1e3b35;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--accent-soft</div><div class="h">#1e3b35</div><div class="u">Selected-row wash, soft button ground</div></div></div>
+<div class="sw"><div class="chip" style="background:#35695c;display:grid;place-items:center;color:#35695c;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--accent-soft-line</div><div class="h">#35695c</div><div class="u">Border of soft accent surfaces</div></div></div>
+<div class="sw"><div class="chip" style="background:#79e0c6;display:grid;place-items:center;color:#79e0c6;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--accent-soft-fg</div><div class="h">#79e0c6</div><div class="u">Text and glyphs on soft accent</div></div></div>
+<div class="sw"><div class="chip" style="background:#182b28;display:grid;place-items:center;color:#182b28;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--accent-ring</div><div class="h">#182b28</div><div class="u">Focus-ring wash</div></div></div>
+</div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Signals</span><span class="s">Status only. A signal colour that is not reporting status is a bug</span></figcaption><div class="body" id="c-colors-signals"><div class="pane"><div class="g"><div class="r">
+<div class="sw"><div class="chip" style="background:#57d18a;display:grid;place-items:center;color:#57d18a;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--ok</div><div class="h">#57d18a</div><div class="u">Live, saved, succeeded</div></div></div>
+<div class="sw"><div class="chip" style="background:#e8b660;display:grid;place-items:center;color:#e8b660;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--warn</div><div class="h">#e8b660</div><div class="u">Unsaved, mock context, truncated results</div></div></div>
+<div class="sw"><div class="chip" style="background:#ff6b62;display:grid;place-items:center;color:#ff6b62;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--error</div><div class="h">#ff6b62</div><div class="u">Error rails, count pills</div></div></div>
+<div class="sw"><div class="chip" style="background:#67a7f7;display:grid;place-items:center;color:#67a7f7;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--info</div><div class="h">#67a7f7</div><div class="u">Inspector values, HTTP methods, library nodes</div></div></div>
+</div></div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Signal grounds</span><span class="s">Every signal has a wash to sit on — never bare red on the panel</span></figcaption><div class="body" id="c-colors-signal-grounds"><div class="pane"><div class="r">
+<div class="sw"><div class="chip" style="background:#16321f;display:grid;place-items:center;color:#16321f;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--ok-soft</div><div class="h">#16321f</div><div class="u">Live-chip ground</div></div></div>
+<div class="sw"><div class="chip" style="background:#2a2112;display:grid;place-items:center;color:#2a2112;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--warn-soft</div><div class="h">#2a2112</div><div class="u">Notice ground</div></div></div>
+<div class="sw"><div class="chip" style="background:#2a1512;display:grid;place-items:center;color:#2a1512;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--error-bg</div><div class="h">#2a1512</div><div class="u">Error row wash</div></div></div>
+<div class="sw"><div class="chip" style="background:#1c2a38;display:grid;place-items:center;color:#1c2a38;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--info-soft</div><div class="h">#1c2a38</div><div class="u">Info notice ground</div></div></div>
+</div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">File type</span><span class="s">Five buckets. Anything else stays grey — a sixth hue needs a sixth pane</span></figcaption><div class="body" id="c-colors-filetype"><div class="pane"><div class="g">
+<div class="r" style="gap:6px">
+<span class="dcs-badge" data-type="js">js</span><span class="dcs-badge" data-type="html">html</span>
+<span class="dcs-badge" data-type="css">css</span><span class="dcs-badge" data-type="json">json</span>
+<span class="dcs-badge" data-type="pdf">pdf</span><span class="dcs-badge" data-type="sp">sp</span>
+<span class="dcs-badge">zip</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:2px">
+<div><div style="font:500 10.5px/1.4 var(--mono);color:var(--ft-js-fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">--ft-js-*</div><div style="font:10.5px/1.4 var(--sans);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">JavaScript · .ts .mjs</div></div>
+<div><div style="font:500 10.5px/1.4 var(--mono);color:var(--ft-html-fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">--ft-html-*</div><div style="font:10.5px/1.4 var(--sans);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">HTML · .svg .aspx</div></div>
+<div><div style="font:500 10.5px/1.4 var(--mono);color:var(--ft-css-fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">--ft-css-*</div><div style="font:10.5px/1.4 var(--sans);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">CSS · .scss</div></div>
+<div><div style="font:500 10.5px/1.4 var(--mono);color:var(--ft-json-fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">--ft-json-*</div><div style="font:10.5px/1.4 var(--sans);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Data · .csv .xlsx</div></div>
+<div><div style="font:500 10.5px/1.4 var(--mono);color:var(--ft-doc-fg);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">--ft-doc-*</div><div style="font:10.5px/1.4 var(--sans);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Document · .pdf .docx</div></div>
+</div>
+<div style="font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Each is a triple: <code style="color:var(--fg-dim)">-fg</code> pill text, <code style="color:var(--fg-dim)">-bg</code> ground, <code style="color:var(--fg-dim)">-line</code> border. A <code style="color:var(--fg-dim)">--ft-*</code> token paints a pill; a <code style="color:var(--fg-dim)">--node-*</code> token paints an icon.</div>
+</div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Node roles</span><span class="s">Folders carry role, files carry type. Grey is a real answer</span></figcaption><div class="body" id="c-colors-node-roles"><div class="pane"><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+<div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:12px">
+<div class="r" style="gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-user)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" fill="var(--node-user-fill)"/></svg><span style="font:500 12px/1 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">User folder</span></div>
+<div class="note" style="margin-top:8px">Content you or the team put there. The default.</div>
+<code style="display:block;margin-top:7px;font:10px/1.4 var(--mono);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">--node-user</code></div><div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:12px">
+<div class="r" style="gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-lib)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" fill="var(--node-lib-fill)"/></svg><span style="font:500 12px/1 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Library</span></div>
+<div class="note" style="margin-top:8px">Vendored code, mirrors, dependencies.</div>
+<code style="display:block;margin-top:7px;font:10px/1.4 var(--mono);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">--node-lib</code></div><div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:12px">
+<div class="r" style="gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-sys)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" fill="var(--node-sys-fill)"/></svg><span style="font:500 12px/1 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">System</span></div>
+<div class="note" style="margin-top:8px">Hidden, Forms, leading underscore. No fill — it recedes.</div>
+<code style="display:block;margin-top:7px;font:10px/1.4 var(--mono);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">--node-sys</code></div><div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:12px">
+<div class="r" style="gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-open)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" fill="var(--node-open-fill)"/></svg><span style="font:500 12px/1 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Open / current</span></div>
+<div class="note" style="margin-top:8px">The one row allowed to be bright.</div>
+<code style="display:block;margin-top:7px;font:10px/1.4 var(--mono);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">--node-open</code></div><div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:12px">
+<div class="r" style="gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-file)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" fill="var(--node-file-fill)"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg><span style="font:500 12px/1 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Everything else</span></div>
+<div class="note" style="margin-top:8px">ZIP, EXE, unknown. Do not invent a hue.</div>
+<code style="display:block;margin-top:7px;font:10px/1.4 var(--mono);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">--node-file</code></div>
+</div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Node tiers</span><span class="s">Rest is the default; you opt into brightness with .is-called-out</span></figcaption><div class="body" id="c-colors-node-tiers"><div class="pane"><div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+<div class="g"><div class="lbl">Rest — the whole list, most of the time</div>
+<div class="r" style="gap:14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-user)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" fill="var(--node-user-fill)"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-lib)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" fill="var(--node-lib-fill)"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-js)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" fill="var(--node-js-fill)"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-html)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" fill="var(--node-html-fill)"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-css)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" fill="var(--node-css-fill)"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-json)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" fill="var(--node-json-fill)"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-doc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" fill="var(--node-doc-fill)"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg></div>
+<div class="note">Low chroma. Type is still legible, but two hundred rows read as one calm list rather than a kaleidoscope.</div></div>
+<div class="g"><div class="lbl" style="color:var(--accent-soft-fg)">Called out — rationed</div>
+<div class="r" style="gap:14px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-user-active)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" fill="var(--node-user-active-fill)"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-lib-active)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" fill="var(--node-lib-active-fill)"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-js-active)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" fill="var(--node-js-active-fill)"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-html-active)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" fill="var(--node-html-active-fill)"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-css-active)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" fill="var(--node-css-active-fill)"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-json-active)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" fill="var(--node-json-active-fill)"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--node-doc-active)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" fill="var(--node-doc-active-fill)"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg></div>
+<div class="note">Full chroma, for a row that is <em style="font-style:normal;color:var(--fg-row)">doing something</em>: the folder you are inside, the selected row, a filter match, a file changed since last sync.</div></div>
+</div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Structure</span><span class="s">Editor ground, hairlines, and the hosted surround</span></figcaption><div class="body" id="c-colors-structure"><div class="pane"><div class="r">
+<div class="sw"><div class="chip" style="background:#17191f;display:grid;place-items:center;color:#17191f;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--bg-editor</div><div class="h">#17191f</div><div class="u">Code ground — matches the Monaco theme</div></div></div>
+<div class="sw"><div class="chip" style="background:#2a2e38;display:grid;place-items:center;color:#2a2e38;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--border</div><div class="h">#2a2e38</div><div class="u">Structural hairlines. Opaque by design</div></div></div>
+<div class="sw"><div class="chip" style="background:#3a4150;display:grid;place-items:center;color:#3a4150;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--border-strong</div><div class="h">#3a4150</div><div class="u">Edges of interactive things</div></div></div>
+<div class="sw"><div class="chip" style="background:#101216;display:grid;place-items:center;color:#101216;font:500 13px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"></div><div class="m"><div class="n">--surround</div><div class="h">#101216</div><div class="u">Hosted SharePoint surround, behind the app</div></div></div>
+</div></div></div></figure>
+<h3>The rules behind the swatches</h3>
+<ul>
+<li>Surfaces step in order and are never skipped. Need more contrast? Add a hairline, don't jump a step. <code>--bg-editor</code> is the code ground and matches the Monaco theme exactly.</li>
+<li><code>--fg-faint</code> is timestamps and hints. It is never body copy — at ≈3.5:1 on <code>--bg-1</code> that rule is doing real work.</li>
+<li>Signals mean status and never decorate. Red text on the plain panel ground is the anti-pattern; every signal has a wash to sit on.</li>
+<li>File type has five buckets — JS, HTML, CSS, Data, Document. Anything else stays grey; a sixth hue needs a sixth pane to justify it. Near relatives inherit: <code>.ts</code>→JS, <code>.scss</code>→CSS, <code>.svg</code>→HTML, <code>.csv</code>/<code>.xlsx</code>→Data.</li>
+<li>Node glyphs have two tiers. The bare token is the <em>resting</em> state, because rest is what the whole list does. You opt into brightness with <code>-active</code> via <code>.is-called-out</code>, and only for a row that is doing something.</li>
+</ul>
+</section>
+
+<hr>
+<section id="type">
+<div class="eyebrow">Foundations</div><h2>Type</h2>
+<p class="lede">Two families; <strong>nothing is downloaded</strong>, which is what lets a tool be a single copyable file. <code>--sans: "Segoe UI"</code> for prose and UI labels — every machine that runs these tools has it, so it is referenced, never shipped. <code>--mono: "Cascadia Code", "Consolas", "SF Mono", Menlo, monospace</code> for anything a machine produced or will consume.</p>
+<figure class="spec"><figcaption><span class="n">The mono rule</span><span class="s">Sans is what a human wrote. Mono is what a machine produced</span></figcaption><div class="body" id="c-type-rule"><div class="pane"><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:14px 16px">
+<div class="r" style="gap:8px"><span style="color:var(--ok);font-weight:700">✓</span><span style="font:12.5px/1.5 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Sans for prose and UI labels</span></div>
+<div style="margin-top:10px;font:13px/1.55 var(--sans);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Uploaded to the Code library. Review the metadata before publishing.</div>
+<div style="margin-top:10px;font:11.5px/1.6 var(--mono);color:var(--fg-mid);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">/sites/NewNerve/Code/tools/dcspad.js<br>243.9 KB · 539f90d3-a5f1 · 200 OK</div></div>
+<div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:14px 16px">
+<div class="r" style="gap:8px"><span style="color:var(--error-fg);font-weight:700">✕</span><span style="font:12.5px/1.5 var(--sans);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">A GUID or path in the sans stack</span></div>
+<div style="margin-top:10px;font:13px/1.55 var(--sans);color:var(--fg-dim);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">/sites/NewNerve/Code/tools/dcspad.js<br>243.9 KB · 539f90d3-a5f1 · 200 OK</div>
+<div class="note" style="margin-top:10px">It stops being scannable. Quantities right-align in mono; identifiers stay copyable.</div></div>
+</div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Sans ramp</span><span class="s">"Segoe UI" — prose and UI labels, referenced not shipped</span></figcaption><div class="body" id="c-type-sans"><div class="pane"><div class="g"><div class="r" style="gap:14px"><span class="spec">26 / 600</span><span style="font-family:var(--sans);font-size:26px;font-weight:600;letter-spacing:normal;text-transform:none;color:var(--fg)">Section heading</span></div><div class="r" style="gap:14px"><span class="spec">17 / 600</span><span style="font-family:var(--sans);font-size:17px;font-weight:600;letter-spacing:normal;text-transform:none;color:var(--fg)">View title</span></div><div class="r" style="gap:14px"><span class="spec">15 / 600</span><span style="font-family:var(--sans);font-size:15px;font-weight:600;letter-spacing:normal;text-transform:none;color:var(--fg)">Dialog title, card title</span></div><div class="r" style="gap:14px"><span class="spec">13 / 400</span><span style="font-family:var(--sans);font-size:13px;font-weight:400;letter-spacing:normal;text-transform:none;color:var(--fg)">Body and menu rows</span></div><div class="r" style="gap:14px"><span class="spec">12.5 / 500</span><span style="font-family:var(--sans);font-size:12.5px;font-weight:500;letter-spacing:normal;text-transform:none;color:var(--fg)">Buttons and rail items</span></div><div class="r" style="gap:14px"><span class="spec">10 / 700 · .14em</span><span style="font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--fg)">Panel title</span></div><div class="r" style="gap:14px"><span class="spec">9.5 / 600 · .06em</span><span style="font-family:var(--sans);font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--fg)">Chip label</span></div></div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Mono ramp</span><span class="s">"Cascadia Code", Consolas — anything a machine produced or consumes</span></figcaption><div class="body" id="c-type-mono"><div class="pane"><div class="g"><div class="r" style="gap:14px"><span class="spec">15 / 700 · .02em</span><span style="font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:.02em;color:var(--fg-row)">DCSPAD</span></div><div class="r" style="gap:14px"><span class="spec">12.5 / 400</span><span style="font-family:var(--mono);font-size:12.5px;font-weight:400;letter-spacing:normal;color:var(--fg-row)">const { sp } = pnp;</span></div><div class="r" style="gap:14px"><span class="spec">12 / 400</span><span style="font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:normal;color:var(--fg-row)">/sites/NewNerve/FCUPortal</span></div><div class="r" style="gap:14px"><span class="spec">11.5 / 500</span><span style="font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:normal;color:var(--fg-row)">243.9 KB · 2026-07-31</span></div><div class="r" style="gap:14px"><span class="spec">11 / 500 · .04em</span><span style="font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--fg-row)">SP: Live</span></div><div class="r" style="gap:14px"><span class="spec">10 / 700</span><span style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:normal;color:var(--fg-row)">12 · 99+</span></div></div></div></div></figure>
+<p style="margin-top:14px">Panel and group titles are uppercase, 10px (9.5px in L2), 700, <code>.14em</code>, <code>--fg-dim</code>. Always — and never for anything longer than three words.</p>
+<div class="note accent" style="margin-top:14px"><div class="t">Ligatures are on</div><p>Cascadia Code's coding ligatures — <code>=&gt; !== &lt;= -&gt; ::</code> — are contextual alternates, on by default but silently dropped by <code>input</code>, <code>textarea</code> and <code>select</code>, and switchable off by a host page. The system states it: <code>--mono-ligatures</code> / <code>--mono-features</code>, applied by <code>base.css</code> and, for a web part that cannot ship it, by <code>dcs-additions.css</code> § 6 on <code>.dcs-app</code> / <code>.dcs-tool</code> and their descendants. Those selectors carry real specificity on purpose — the <code>font:</code> shorthand resets <code>font-variant-*</code>, so a <code>:where()</code> rule loses to every <code>font: var(--t-*)</code> in the sheet. Use <code>.dcs-liga</code> to opt in outside a shell, <code>.dcs-liga-off</code> where a ligature is wrong — a character-by-character diff.</p></div>
+</section>
+
+<hr>
+<section id="space">
+<div class="eyebrow">Foundations</div><h2>Space, shape, elevation</h2>
+<p class="lede">A 2px base, but only these values ship: <strong>2 · 4 · 6 · 8 · 10 · 12 · 14 · 16 · 20 · 24</strong>. Gutters between panes are always <strong>5px</strong> — that is the splitter track, a control, not a spacing step.</p>
+<figure class="spec"><figcaption><span class="n">Spacing scale</span><span class="s">A 2px base, but only these values ship</span></figcaption><div class="body" id="c-space-scale"><div class="pane"><div class="g"><div class="r" style="align-items:flex-end;gap:8px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:5px"><i style="display:block;background:var(--accent-soft-line);border-top:2px solid var(--accent);width:12px;height:4px"></i><span style="font:10px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">2</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:5px"><i style="display:block;background:var(--accent-soft-line);border-top:2px solid var(--accent);width:12px;height:8px"></i><span style="font:10px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">4</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:5px"><i style="display:block;background:var(--accent-soft-line);border-top:2px solid var(--accent);width:12px;height:12px"></i><span style="font:10px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">6</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:5px"><i style="display:block;background:var(--accent-soft-line);border-top:2px solid var(--accent);width:12px;height:16px"></i><span style="font:10px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">8</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:5px"><i style="display:block;background:var(--accent-soft-line);border-top:2px solid var(--accent);width:12px;height:20px"></i><span style="font:10px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">10</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:5px"><i style="display:block;background:var(--accent-soft-line);border-top:2px solid var(--accent);width:12px;height:24px"></i><span style="font:10px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">12</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:5px"><i style="display:block;background:var(--accent-soft-line);border-top:2px solid var(--accent);width:12px;height:32px"></i><span style="font:10px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">16</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:5px"><i style="display:block;background:var(--accent-soft-line);border-top:2px solid var(--accent);width:12px;height:40px"></i><span style="font:10px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">20</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:5px"><i style="display:block;background:var(--accent-soft-line);border-top:2px solid var(--accent);width:12px;height:48px"></i><span style="font:10px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">24</span></div>
+</div><div class="note">Gutters between panes are always <strong style="color:var(--fg-row);font-weight:600">5px</strong> — that is the splitter track, a control, not a spacing step.</div></div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Radius</span><span class="s">Three radii, and they are assigned — not chosen by eye</span></figcaption><div class="body" id="c-space-radius"><div class="pane"><div class="g">
+<div class="r" style="gap:12px"><i style="width:40px;height:24px;background:var(--bg-3);border:1px solid var(--border-strong);border-radius:var(--radius-s);display:block"></i><span style="font:12.5px/1 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"><b style="color:var(--accent-soft-fg);font:500 12px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">3px</b> — rows, badges, tags</span></div><div class="r" style="gap:12px"><i style="width:40px;height:24px;background:var(--bg-3);border:1px solid var(--border-strong);border-radius:var(--radius-m);display:block"></i><span style="font:12.5px/1 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"><b style="color:var(--accent-soft-fg);font:500 12px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">4px</b> — buttons, inputs, cards</span></div><div class="r" style="gap:12px"><i style="width:40px;height:24px;background:var(--bg-3);border:1px solid var(--border-strong);border-radius:var(--radius-l);display:block"></i><span style="font:12.5px/1 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"><b style="color:var(--accent-soft-fg);font:500 12px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">6px</b> — the app shell, menus, dialogs</span></div><div class="r" style="gap:12px"><i style="width:40px;height:24px;background:var(--bg-3);border:1px solid var(--border-strong);border-radius:var(--radius-pill);display:block"></i><span style="font:12.5px/1 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)"><b style="color:var(--accent-soft-fg);font:500 12px/1 var(--mono);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">999px</b> — status chips only</span></div>
+</div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Density tiers</span><span class="s">Pick by the container, not by taste — never mix two tiers in one row</span></figcaption><div class="body" id="c-space-density"><div class="pane"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+<div class="g" style="gap:9px"><div class="r" style="gap:8px"><span style="font:700 12px/1 var(--mono);color:var(--accent);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">lg</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">28px</span></div>
+<div class="r" style="gap:6px"><button class="dcs-btn" style="height:28px;padding:0 13px;font-size:12.5px">Run</button><button class="dcs-btn dcs-btn-icon" style="width:28px;height:28px" title="Refresh"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 8A5.2 5.2 0 1 1 11 3.8"/><path d="M13.2 2.6v3.2H10"/></svg></button></div>
+<div class="note">Topbar and tool header — the one row a user hits without looking.</div></div><div class="g" style="gap:9px"><div class="r" style="gap:8px"><span style="font:700 12px/1 var(--mono);color:var(--accent);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">md</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">26px</span></div>
+<div class="r" style="gap:6px"><button class="dcs-btn" style="height:26px;padding:0 12px;font-size:12px">Run</button><button class="dcs-btn dcs-btn-icon" style="width:26px;height:26px" title="Refresh"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 8A5.2 5.2 0 1 1 11 3.8"/><path d="M13.2 2.6v3.2H10"/></svg></button></div>
+<div class="note">The default. View toolbars, dialogs, control panels, forms.</div></div><div class="g" style="gap:9px"><div class="r" style="gap:8px"><span style="font:700 12px/1 var(--mono);color:var(--accent);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">sm</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">22px</span></div>
+<div class="r" style="gap:6px"><button class="dcs-btn" style="height:22px;padding:0 8px;font-size:11px">Run</button><button class="dcs-btn dcs-btn-icon" style="width:22px;height:22px" title="Refresh"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 8A5.2 5.2 0 1 1 11 3.8"/><path d="M13.2 2.6v3.2H10"/></svg></button></div>
+<div class="note">Panel heads and inline toolbars, beside a title.</div></div><div class="g" style="gap:9px"><div class="r" style="gap:8px"><span style="font:700 12px/1 var(--mono);color:var(--accent);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">xs</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">20px</span></div>
+<div class="r" style="gap:6px"><button class="dcs-btn" style="height:20px;padding:0 6px;font-size:10.5px">Run</button><button class="dcs-btn dcs-btn-icon" style="width:20px;height:20px" title="Refresh"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 8A5.2 5.2 0 1 1 11 3.8"/><path d="M13.2 2.6v3.2H10"/></svg></button></div>
+<div class="note">Escape hatch. Only inside a tight strip, grouped, glyph-only.</div></div>
+</div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Elevation</span><span class="s">One shadow, and it means "this floats above the app"</span></figcaption><div class="body" id="c-space-elevation"><div class="pane"><div class="r" style="gap:24px">
+<div style="width:120px;height:66px;background:var(--bg-2);border:1px solid var(--border-strong);border-radius:var(--radius-l);box-shadow:var(--shadow-pop)"></div>
+<code style="font:10.5px/1.7 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">--shadow-pop:<br>0 10px 28px -10px #000d</code>
+<div class="note" style="flex:1 1 200px;min-width:180px">Menus, dialogs and toasts carry it. <strong style="color:var(--fg-row);font-weight:600">Panels never do</strong> — they are separated by hairlines and surface steps. Using a shadow to separate two adjacent panels is the mistake this rule exists to prevent.</div>
+</div></div></div></figure>
+<h3>Cards, borders, hover, press, focus</h3>
+<p>A "card" here is a panel: flat <code>--bg-1</code>, a 1px opaque <code>--border</code> hairline, radius 4 (6 for a shell, menu or dialog), <strong>no shadow</strong>, no gradient, no coloured left border. Hairlines are opaque — never <code>rgba</code> — so they read identically over every surface step. Interactive edges step up to <code>--border-strong</code>.</p>
+<p><strong>Hover changes colour, never size.</strong> No transform, no shadow, no border-width change — nothing that shifts layout. Row tools fade in with <code>opacity</code>, not <code>visibility</code>, so they stay clickable and testable. Selected rows keep a resting state (accent rail + chrome ground) so selection survives losing hover. Press is the same wash one step darker; there is no scale-down. Focus is <code>:focus-visible</code> only — <code>--accent-soft-line</code> outline plus a 2px <code>--accent-ring</code> wash. Mouse clicks never light a ring.</p>
+<h3>Backgrounds and imagery</h3>
+<p>No images, no gradients, no textures, no blur. Depth comes from four flat greys, hairlines, and the one shadow. The only patterned surface in the system is the L2 canvas stage: a 24px hairline lattice, so an artboard's real edges read against the dark ground. Transparency appears in exactly four places — the shadow, the dialog backdrop, the skeleton shimmer, and disabled opacity. <strong>There is no photography and no illustration anywhere in this system, including in empty states, deliberately.</strong></p>
+</section>
+
+<hr>
+<section id="motion">
+<div class="eyebrow">Foundations</div><h2>Motion</h2>
+<p class="lede">Four beats, nothing outside them, because motion in a developer tool is feedback rather than personality. Easing is <code>cubic-bezier(.35, 0, .25, 1)</code>.</p>
+<figure class="spec"><figcaption><span class="n">Motion beats</span><span class="s">Four beats. Nothing outside them</span></figcaption><div class="body" id="c-motion-beats"><div class="pane"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+<div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:14px">
+<div class="r" style="gap:8px"><span style="font:600 14px/1 var(--mono);color:var(--accent);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">tint</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">120ms</span></div>
+<div class="note" style="margin-top:8px;color:var(--fg-dim)">Hover, focus, colour-only change. Never moves anything.</div>
+<code style="display:block;margin-top:9px;font:10.5px/1.5 var(--mono);color:var(--fg-faint);white-space:pre-line;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">transition:\A  background .12s,\A  color .12s</code></div><div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:14px">
+<div class="r" style="gap:8px"><span style="font:600 14px/1 var(--mono);color:var(--accent);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">move</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">220ms</span></div>
+<div class="note" style="margin-top:8px;color:var(--fg-dim)">A panel opens, a menu drops, chrome slides. Layout changed and you should see how.</div>
+<code style="display:block;margin-top:9px;font:10.5px/1.5 var(--mono);color:var(--fg-faint);white-space:pre-line;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">.dcs-menu\A.dcs-panel-enter</code></div><div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:14px">
+<div class="r" style="gap:8px"><span style="font:600 14px/1 var(--mono);color:var(--accent);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">beat</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">460ms</span></div>
+<div class="note" style="margin-top:8px;color:var(--fg-dim)">A result arrived. Pop, flash, toast. Once per event, never on a timer.</div>
+<code style="display:block;margin-top:9px;font:10.5px/1.5 var(--mono);color:var(--fg-faint);white-space:pre-line;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">.dcs-pop\A.dcs-toast</code></div><div style="background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);padding:14px">
+<div class="r" style="gap:8px"><span style="font:600 14px/1 var(--mono);color:var(--accent);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">scan</span><span style="font:500 11px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">820ms</span></div>
+<div class="note" style="margin-top:8px;color:var(--fg-dim)">Work in progress. Sweeps once for a fast run; loops only while genuinely pending.</div>
+<code style="display:block;margin-top:9px;font:10.5px/1.5 var(--mono);color:var(--fg-faint);white-space:pre-line;font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">.is-sweeping\A.is-pending</code></div>
+</div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Pending states</span><span class="s">Three ways to say "still working", and when each is right</span></figcaption><div class="body" id="c-motion-pending"><div class="pane"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+<div class="g"><div class="lbl">Scan bar</div>
+<div class="is-pending" style="position:relative;overflow:hidden;height:30px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-m);display:flex;align-items:center;padding:0 12px"><span class="lbl" style="color:var(--fg-dim)">Preview</span><span class="dcs-scanline"></span></div>
+<div class="note">A run is in flight and the surface it affects is already on screen.</div></div>
+<div class="g"><div class="lbl">Skeleton</div>
+<div style="display:grid;gap:6px"><i class="dcs-skel" style="width:70%"></i><i class="dcs-skel" style="width:92%;animation-delay:.1s"></i><i class="dcs-skel" style="width:54%;animation-delay:.2s"></i></div>
+<div class="note">Only where the shape is known in advance — grid rows, cards. Otherwise use the spinner.</div></div>
+<div class="g"><div class="lbl">Spinner</div>
+<div style="display:flex;align-items:center;gap:10px;height:30px"><i style="width:17px;height:17px;border:2px solid var(--border-strong);border-top-color:var(--accent);border-radius:50%;animation:dcs-spin .75s linear infinite;display:block"></i><span style="font:12px/1 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Reading schema…</span></div>
+<div class="note">Shape unknown. Pair it with a line saying what is being read.</div></div>
+</div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Non-negotiable</span><span class="s">Motion in a developer tool is feedback, not personality</span></figcaption><div class="body" id="c-motion-rules"><div class="pane"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px">
+<div style="display:flex;gap:10px"><span style="flex:none;color:var(--error-fg);font-weight:700">✕</span><span style="font:12.5px/1.5 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">No entrance animation on page load beyond the splash.</span></div><div style="display:flex;gap:10px"><span style="flex:none;color:var(--error-fg);font-weight:700">✕</span><span style="font:12.5px/1.5 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">No animation that loops when nothing is pending.</span></div><div style="display:flex;gap:10px"><span style="flex:none;color:var(--error-fg);font-weight:700">✕</span><span style="font:12.5px/1.5 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">No layout-shifting hover. Hover changes colour, never size.</span></div><div style="display:flex;gap:10px"><span style="flex:none;color:var(--ok);font-weight:700">✓</span><span style="font:12.5px/1.5 var(--sans);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Every tool ships the <code style="color:var(--accent-soft-fg)">prefers-reduced-motion</code> kill switch.</span></div>
+</div></div></div></figure>
+</section>
+
+<hr>
+<section id="icons">
+<div class="eyebrow">Foundations</div><h2>Icons &amp; brand</h2>
+<p class="lede"><strong>There is no icon package.</strong> Tools get copied around and inlined; a CDN icon font would drift or break. So icons are inline SVG and consistency comes from one hard rule instead of one library.</p>
+<figure class="spec"><figcaption><span class="n">Icon geometry</span><span class="s">16 grid at stroke 1.4, or 24 grid at stroke 2 — the two mix cleanly</span></figcaption><div class="body" id="c-icon-geometry"><div class="pane">
+<div class="wrap">
+<div>
+<div class="lbl">16 grid · stroke 1.4</div>
+<div class="row">
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-search"></use></svg><b>search</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-refresh"></use></svg><b>refresh</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-code"></use></svg><b>code</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-wrap"></use></svg><b>wrap</b></span>
+</div>
+<div class="note">DCSPad's own shapes, hand-built on the 16 grid and not worth redrawing — copy from the app first.</div>
+</div>
+<div>
+<div class="lbl">24 grid · stroke 2</div>
+<div class="row">
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-folder"></use></svg><b>folder</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-file"></use></svg><b>file</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-trash"></use></svg><b>trash</b></span>
+<span class="t"><svg width="16" height="16" aria-hidden="true"><use href="#dcs-settings"></use></svg><b>settings</b></span>
+</div>
+<div class="note">Lucide, pasted as-is. At 16px a stroke-2 24-grid glyph renders a 1.33px line, which sits right beside the 16-grid's 1.4 — so the two mix in one row without looking mismatched.</div>
+</div>
+</div>
+<div class="note" style="margin-top:14px"><code>fill="none" stroke="currentColor"</code>, round cap and join, always <code>aria-hidden</code>. Colour comes from the parent — never hard-code a hex on a glyph. Copy from DCSPad first, <a href="https://lucide.dev">Lucide</a> second, draw third. No package, no CDN. <strong style="color:var(--fg-row);font-weight:600">The full named set lives on the Identity component card</strong> — this card is the rule, not the inventory.</div>
+</div></div></figure>
+<ul style="margin-top:16px">
+<li><strong>Copy from DCSPad first, <a href="https://lucide.dev">Lucide</a> second, draw third.</strong> Paste Lucide SVG as-is — keep its <code>viewBox="0 0 24 24"</code> and <code>stroke-width="2"</code>, set width/height to 15–16, delete the class attributes. Do not install the package; do not fetch from a CDN.</li>
+<li><strong>No emoji. Ever.</strong> Emoji folder icons are exactly what the node glyph system replaced. No filled glyph among the line ones either — the exceptions are the solid play triangle on the Run verb, <code>PinGlyph</code>, and the six-dot <code>DragGlyph</code>.</li>
+<li><strong>One gear, and it is Lucide's.</strong> <code>&lt;Icon name="settings" /&gt;</code> is the single gear; <code>advanced</code> is an alias of it. Two shapes for one idea is the drift this rule prevents.</li>
+<li><strong>Microsoft product marks are not system glyphs.</strong> <code>&lt;ProductGlyph name="copilot" | "sharepoint" /&gt;</code> holds the two that remain — trademarks, used only where the control opens the product they name, never recoloured into the accent. The SharePoint mark in <code>Icon</code> is the one exception: it is drawn to the system's own rule.</li>
+<li>Three ways to ship the same shapes: <code>&lt;Icon name="…"&gt;</code> from the bundle, <code>assets/icons.svg</code> as a <code>&lt;symbol&gt;</code> sprite, or <code>assets/icons.js</code> — the same sprite, self-injecting, for pages that cannot reference an external <code>&lt;use&gt;</code> target.</li>
+</ul>
+<h3>Brand marks</h3>
+<p>No logo file exists and none was drawn. Identity is a letter on a 4 × 5 pixel grid inside a tinted tile, the 2×2 instrument mark for L2, and the split-weight mono wordmark. Anywhere a logo would go, set the tool's name in the mono wordmark.</p>
+<figure class="spec"><figcaption><span class="n">Workbench marks · L1</span><span class="s">A letter on a 4x5 pixel grid — the tile is the constant</span></figcaption><div class="body" id="c-brand-marks"><div class="pane"><div class="g"><div class="r" style="gap:28px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:9px"><span class="dcs-mark dcs-mark-lg"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class="on"></i><i class=""></i><i class=""></i><i class="dim"></i><i class="on"></i><i class=""></i><i class=""></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class="dim"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span><span style="font:600 12px/1 var(--mono);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">D</span><span class="note" style="text-align:center;max-width:92px">DCS · DCSPad — the primary</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:9px"><span class="dcs-mark dcs-mark-lg"><i class=""></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class="dim"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span><span style="font:600 12px/1 var(--mono);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">S</span><span class="note" style="text-align:center;max-width:92px">SP Workbench</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:9px"><span class="dcs-mark dcs-mark-lg"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class="on"></i><i class="dim"></i><i class=""></i><i class=""></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class="dim"></i><i class="on"></i><i class=""></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span style="font:600 12px/1 var(--mono);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">I</span><span class="note" style="text-align:center;max-width:92px">Site Inspector (planned)</span></div><div style="display:flex;flex-direction:column;align-items:center;gap:9px"><span class="dcs-mark dcs-mark-lg"><i class=""></i><i class="on"></i><i class="on"></i><i class=""></i><i class="on"></i><i class=""></i><i class=""></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class="on"></i><i class="on"></i><i class=""></i><i class="dim"></i><i class="on"></i><i class=""></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span style="font:600 12px/1 var(--mono);color:var(--fg-row);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">Q</span><span class="note" style="text-align:center;max-width:92px">Query (planned)</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:9px"><span class="dcs-mark"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class="on"></i><i class=""></i><i class=""></i><i class="dim"></i><i class="on"></i><i class=""></i><i class=""></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class="dim"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span><span class="note" style="text-align:center;max-width:92px">3px cells<br>shipping</span></div>
+</div>
+<div class="note">Cells 3px, gap 1.5px, tile padding 4px, radius 6px — doubled for a masthead. Two lit cells drop to 55% so the mark reads as a display that is <em style="font-style:normal;color:var(--fg-row)">on</em>. A letter that will not read on the 4x5 grid means the tool needs a different name, not a bigger grid.</div></div></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Instrument mark · L2</span><span class="s">Compact tools get no letter — the mark identifies the family</span></figcaption><div class="body" id="c-brand-instrument"><div class="pane"><div class="g"><div class="r" style="gap:26px">
+<span class="dcs-mark-2x2" style="grid-template-columns:repeat(2,14px);grid-auto-rows:14px;gap:4px"><i></i><i></i><i></i><i></i></span>
+<span class="dcs-mark-2x2"><i></i><i></i><i></i><i></i></span>
+<span style="font:10.5px/1.5 var(--mono);color:var(--fg-faint);font-variant-ligatures:var(--mono-ligatures);font-feature-settings:var(--mono-features)">14px demo<br>6px shipping</span>
+<span style="width:1px;height:36px;background:var(--border)"></span>
+<span class="dcs-wordmark">DCS<b>WORKBENCH</b></span>
+<span class="dcs-wordmark" style="font-size:13px">SP<b>WORKBENCH</b></span>
+</div>
+<div class="note">Four cells, one accent hue, four brightness steps: 100 / 62 / 38 / 20%. <strong style="color:var(--fg-row);font-weight:600">No tile, no outline, no background</strong> — it sits directly on the tool header. The wordmark beside it is mono, split weight: quiet prefix, accent suffix.</div></div></div></div></figure>
+</section>
+
+<hr>
+<section id="components">
+<div class="eyebrow">Build</div><h2>Components</h2>
+<p class="lede">Every primitive, live. Read them as the reference rendering — if your tool's control does not look like this, yours is wrong.</p>
+<figure class="spec"><figcaption><span class="n">Controls</span><span class="s">Buttons in four tiers, segmented control, the welded xs microbar</span></figcaption><div class="body" id="c-controls"><div class="pane"><div id="root-c-controls"></div>
+<script type="text/babel">
+const { Button, IconButton, Segmented, Microbar, MicrobarValue, Icon, PlayGlyph } = window.DCSWorkbenchDesignSystem_dafd54;
+
+function Card() {
+  const [v, setV] = React.useState('Tree');
+  return (
+    <div className="gr">
+      <div className="rw">
+        <div className="col"><span className="cl">primary · lg</span><Button variant="primary" size="lg" kbd="⌘↵"><PlayGlyph />Run</Button></div>
+        <div className="col"><span className="cl">soft</span><Button variant="soft">Add framework</Button></div>
+        <div className="col"><span className="cl">default</span><Button>Inspect</Button></div>
+        <div className="col"><span className="cl">ghost</span><Button variant="ghost">Cancel</Button></div>
+        <div className="col"><span className="cl">sm</span><Button size="sm">Export</Button></div>
+        <div className="col"><span className="cl">:disabled</span><Button disabled>Review metadata</Button></div>
+        <div className="col"><span className="cl">icon · sm</span><span style={{display:'flex',gap:2}}>
+          <IconButton size="sm" title="Refresh"><Icon name="refresh" size={13} /></IconButton>
+          <IconButton size="sm" title="Maximise"><Icon name="maximize" size={13} /></IconButton>
+          <IconButton size="sm" variant="danger" title="Delete"><Icon name="trash" size={13} /></IconButton>
+        </span></div>
+      </div>
+      <div className="rw" style={{alignItems:'flex-end'}}>
+        <div className="col"><span className="cl">segmented</span><Segmented options={['Tree','Table','Raw']} value={v} onChange={setV} /></div>
+        <div className="col" style={{flex:'1 1 300px'}}><span className="cl">microbar — xs, welded, glyph-only, every child titled</span>
+          <Microbar>
+            <button title="Back"><Icon name="arrow-left" size={12} /></button>
+            <MicrobarValue>https://nervedotnet.sharepoin</MicrobarValue>
+            <button title="Reload"><Icon name="refresh" size={12} /></button>
+            <button title="Open folder"><Icon name="folder" size={13} /></button>
+            <button title="Go"><Icon name="arrow-right" size={12} /></button>
+          </Microbar>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root-c-controls')).render(<Card />);
+</script></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Forms</span><span class="s">Fields, mono inputs, invalid, select, toggle, slider, swatches, resize rail</span></figcaption><div class="body" id="c-forms"><div class="pane"><div id="root-c-forms"></div>
+<script type="text/babel">
+const { Field, Input, Textarea, Select, Toggle, Check, Slider, Swatches, ResizeRail } = window.DCSWorkbenchDesignSystem_dafd54;
+
+function Card() {
+  const [w, setW] = React.useState(9);
+  const [c, setC] = React.useState('#3fd8b4');
+  const [on, setOn] = React.useState(true);
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'18px 24px'}}>
+      <Field label="Text input"><Input defaultValue="Meet the Insights team" /></Field>
+      <Field label="Mono input — paths, URLs, endpoints" hint="Focus: --accent-soft-line border + 2px --accent-ring.">
+        <Input mono defaultValue="/sites/NewNerve/FCUPortal/Code" />
+      </Field>
+      <Field label="Select"><Select options={['Documents','Site Pages','Announcements']} /></Field>
+      <Field label="Invalid" invalid hint="Enter an absolute https:// URL on this tenant."><Input invalid defaultValue="not a url" /></Field>
+      <Field label="Stroke weight" value={w + ' px'}><Slider min={1} max={40} value={w} onChange={e => setW(+e.target.value)} /></Field>
+      <Field label="Disabled"><Input disabled defaultValue="DocVersion" /></Field>
+      <div className="col"><span className="cl">toggle · check</span>
+        <div className="rw" style={{gap:20,alignItems:'center'}}>
+          <Toggle label="Auto-run" checked={on} onChange={e => setOn(e.target.checked)} />
+          <Toggle label="Run as module" checked={false} onChange={() => {}} />
+          <Check label="Clear console on run" defaultChecked />
+        </div>
+      </div>
+      <div className="col"><span className="cl">swatches · resize rail</span>
+        <div className="rw" style={{gap:20,alignItems:'center'}}>
+          <Swatches colors={['#3fd8b4','#67a7f7','#e8b660','#f2f5fa']} value={c} onChange={setC} />
+          <span style={{display:'flex',alignItems:'stretch',height:44}}>
+            <ResizeRail tip="" />
+            <span style={{width:120,border:'1px solid var(--border)',borderLeft:0,borderRadius:'0 4px 4px 0',backgroundColor:'var(--bg-0)',backgroundImage:'linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px)',backgroundSize:'24px 24px,24px 24px'}} />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root-c-forms')).render(<Card />);
+</script></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Navigation</span><span class="s">Editor tabs with a count pill, underline tabs, mono breadcrumbs, grouped rail</span></figcaption><div class="body" id="c-navigation"><div class="pane"><div id="root-c-navigation"></div>
+<script type="text/babel">
+const { Tabs, Crumbs, Rail, RailLabel, RailItem, Icon } = window.DCSWorkbenchDesignSystem_dafd54;
+
+function Card() {
+  const [t, setT] = React.useState('html');
+  const [u, setU] = React.useState('Fields');
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'1fr 190px',gap:20,alignItems:'start'}}>
+      <div className="gr">
+        <div className="col"><span className="cl">.dcs-tabs — the active tab drops to the surface it opens</span>
+          <div>
+            <Tabs tabs={[{value:'html',label:'HTML'},{value:'css',label:'CSS'},{value:'console',label:'Console',count:3}]} value={t} onChange={setT} />
+            <div style={{height:34,background:'var(--bg-editor)',borderRadius:'0 0 4px 4px'}} />
+          </div>
+        </div>
+        <div className="col"><span className="cl">.dcs-tabs-underline — tabs inside a view</span>
+          <Tabs underline tabs={['Fields','Items','Raw']} value={u} onChange={setU} />
+        </div>
+        <div className="col"><span className="cl">.dcs-crumbs — always mono, last segment is not a button</span>
+          <Crumbs items={['/sites/NewNerve','Documents','Splash']} />
+        </div>
+      </div>
+      <Rail style={{border:'1px solid var(--border)',borderRadius:4}}>
+        <RailLabel>Site</RailLabel>
+        <RailItem glyph={<Icon name="globe" />}>Overview</RailItem>
+        <RailLabel>Content</RailLabel>
+        <RailItem glyph={<Icon name="list" />}>Lists</RailItem>
+        <RailItem glyph={<Icon name="folder" />} active>Files</RailItem>
+        <RailLabel>Tools</RailLabel>
+        <RailItem glyph={<Icon name="code" />}>Console</RailItem>
+      </Rail>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root-c-navigation')).render(<Card />);
+</script></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Data</span><span class="s">Grid with a sorted column, node rows in both tiers, list rows, the inspector tree</span></figcaption><div class="body" id="c-data"><div class="pane"><div id="root-c-data"></div>
+<script type="text/babel">
+const { DataGrid, NodeRow, ListRow, Tree, Check } = window.DCSWorkbenchDesignSystem_dafd54;
+
+function Card() {
+  const rows = [
+    { id:1, title:'Announcements', internal:'Announcements', items:'18' },
+    { id:2, title:'Documents', internal:'Shared Documents', items:'412', selected:true },
+    { id:3, title:'Site Pages', internal:'SitePages', items:'37' },
+    { id:4, title:'appdata', internal:'appdata', items:'4', dim:true },
+  ];
+  return (
+    <div className="gr">
+      <DataGrid columns={[{key:'title',label:'Title'},{key:'internal',label:'Internal name',mono:true},{key:'items',label:'Items',num:true}]}
+        rows={rows} sort={{key:'title',dir:'asc'}} onSort={() => {}} onOpenRow={() => {}} />
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16}}>
+        <div className="col"><span className="cl">node rows — rest, one called out</span>
+          <div style={{background:'var(--bg-1)',border:'1px solid var(--border)',borderRadius:4,padding:4}}>
+            <NodeRow node={{name:'Lateleir',kind:'folder',role:'user',meta:'folder'}} />
+            <NodeRow node={{name:'Forms',kind:'folder',role:'sys',meta:'system'}} />
+            <NodeRow node={{name:'Splash',kind:'folder',role:'open',meta:'open'}} calledOut />
+            <NodeRow node={{name:'dcspad.js',kind:'file',role:'js',meta:'65 B'}} />
+            <NodeRow node={{name:'Brief.pdf',kind:'file',role:'doc',meta:'44.3 KB'}} />
+          </div>
+        </div>
+        <div className="col"><span className="cl">list rows</span>
+          <div style={{background:'var(--bg-1)',border:'1px solid var(--border)',borderRadius:4,padding:4}}>
+            <ListRow lead={<Check />} name="Chart.js" meta="1.2 MB" />
+            <ListRow lead={<Check defaultChecked />} name="Fluent System Icons" on />
+            <ListRow lead={<Check />} name="DCS Standard Include" muted />
+          </div>
+        </div>
+        <div className="col"><span className="cl">inspector tree</span>
+          <div style={{background:'var(--bg-1)',border:'1px solid var(--border)',borderRadius:4,padding:'6px 10px'}}>
+            <Tree data={{ web: { Title:'New Nerve', Id:'539f90d3-a5f1…', ItemCount:128, Hidden:false } }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root-c-data')).render(<Card />);
+</script></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Feedback</span><span class="s">File-type badges, status chips, counts, keycaps, notices, the three states</span></figcaption><div class="body" id="c-feedback"><div class="pane"><div id="root-c-feedback"></div>
+<script type="text/babel">
+const { Badge, Chip, CountPill, Kbd, Notice, State, Skeleton, Icon } = window.DCSWorkbenchDesignSystem_dafd54;
+
+function Card() {
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px 22px'}}>
+      <div className="col"><span className="cl">file-type badge — the same triple as the node glyph</span>
+        <div className="rw" style={{gap:6}}>
+          <Badge type="js" /><Badge type="html" /><Badge type="css" /><Badge type="json" /><Badge type="doc">pdf</Badge><Badge>sp</Badge>
+        </div>
+      </div>
+      <div className="col"><span className="cl">status chip — one home per tool</span>
+        <div className="rw" style={{gap:8,alignItems:'center'}}>
+          <Chip tone="ok">SP: Live</Chip><Chip tone="warn">SP: Mock</Chip><Chip tone="err">Digest expired</Chip>
+          <CountPill>3</CountPill>
+        </div>
+      </div>
+      <div className="col" style={{gridColumn:'1 / -1'}}><span className="cl">notices — lead with the machine fact, name the object</span>
+        <div className="gr" style={{gap:7}}>
+          <Notice tone="info" icon={<Icon name="info" size={13} />}>Results are capped at 100 — a nextLink is available.</Notice>
+          <Notice tone="warn" icon={<Icon name="warn" size={13} />}>This folder already contains a file with that name.</Notice>
+          <Notice tone="err" icon={<Icon name="error" size={13} />}>403 — the request digest expired. Retrying once.</Notice>
+          <Notice tone="ok" icon={<Icon name="check" size={13} />}>Uploaded to /Code/tools/dcspad · v2.0</Notice>
+        </div>
+      </div>
+      <div className="col"><span className="cl">states — one centred mono line, no illustration</span>
+        <div className="gr" style={{gap:8}}>
+          <div style={{background:'var(--bg-1)',border:'1px solid var(--border)',borderRadius:4}}><State>Console is clear — console.log from your JS lands here</State></div>
+          <div style={{background:'var(--bg-1)',border:'1px solid var(--border)',borderRadius:4}}><State tone="err">404 — that list does not exist on this web</State></div>
+        </div>
+      </div>
+      <div className="col"><span className="cl">loading · skeleton · keycaps</span>
+        <div className="gr" style={{gap:8}}>
+          <div style={{background:'var(--bg-1)',border:'1px solid var(--border)',borderRadius:4}}><State tone="loading">Reading the field schema…</State></div>
+          <div className="gr" style={{gap:6}}><Skeleton width="70%" /><Skeleton width="92%" delay={0.1} /><Skeleton width="54%" delay={0.2} /></div>
+          <div className="rw" style={{gap:8,alignItems:'center',fontSize:12}}><Kbd>Ctrl/Cmd + Enter</Kbd> run <Kbd>Esc</Kbd> step back</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root-c-feedback')).render(<Card />);
+</script></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Overlay</span><span class="s">Menu, dialog and the one-phrase tip — the only three floating surfaces</span></figcaption><div class="body" id="c-overlay"><div class="pane"><div id="root-c-overlay"></div>
+<script type="text/babel">
+const { Menu, MenuLabel, MenuItem, MenuSep, Badge, Button, IconButton, TipHost, Field, Input, Icon } = window.DCSWorkbenchDesignSystem_dafd54;
+
+function Card() {
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'260px 1fr',gap:24,alignItems:'start'}}>
+      <div className="col"><span className="cl">menu</span>
+        <Menu style={{position:'static'}}>
+          <MenuLabel>Export</MenuLabel>
+          <MenuItem lead={<Badge type="html" />}>Export HTML</MenuItem>
+          <MenuItem lead={<Badge type="js" />} active>Export JS</MenuItem>
+          <MenuSep />
+          <MenuItem lead={<Badge>sp</Badge>} disabled>Export to SharePoint…</MenuItem>
+        </Menu>
+      </div>
+      <div className="col"><span className="cl">dialog · tip</span>
+        <div className="dcs-dialog" style={{width:340,margin:0}}>
+          <div className="dcs-dialog-panel">
+            <div className="dcs-dialog-head">
+              <h2>Save snippet</h2>
+              <IconButton size="sm" title="Close"><Icon name="close" size={13} /></IconButton>
+            </div>
+            <p className="dcs-dialog-context">Saving the current JS selection — 14 lines.</p>
+            <Field label="Snippet name"><Input mono /></Field>
+            <div className="dcs-dialog-actions">
+              <Button variant="ghost">Cancel</Button>
+              <Button variant="primary" size="lg">Save snippet</Button>
+            </div>
+          </div>
+        </div>
+        <TipHost tip="Maximise pane" below><IconButton size="sm" title="Maximise pane"><Icon name="maximize" size={13} /></IconButton></TipHost>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root-c-overlay')).render(<Card />);
+</script></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Shell</span><span class="s">L2 instrument shell: head, grouped control column, canvas with its own bar</span></figcaption><div class="body" id="c-shell"><div class="pane"><div id="root-c-shell"></div>
+<script type="text/babel">
+const { ToolShell, Controls, ControlGroup, ControlRow, Canvas, PanelTitle, Field, Input, Select, Slider, Button, IconButton, Icon, Toggle } = window.DCSWorkbenchDesignSystem_dafd54;
+
+function Card() {
+  const [h, setH] = React.useState(680);
+  return (
+    <ToolShell title="Halo" accent="generator" canvas
+      actions={<><Button size="sm">Copy code</Button><Button variant="primary" size="lg">Generate</Button></>}
+      style={{height:'296px'}}>
+      <Controls>
+        <ControlGroup title="Geometry">
+          <ControlRow>
+            <Field label="Width"><Input defaultValue="1280" /></Field>
+            <Field label="Ratio"><Select options={['16:9','4:3','1:1']} /></Field>
+          </ControlRow>
+          <Field label="Artboard height" value={h}><Slider min={200} max={1200} value={h} onChange={e => setH(+e.target.value)} /></Field>
+        </ControlGroup>
+        <ControlGroup title="Output">
+          <Toggle label="Auto-run" checked onChange={() => {}} />
+        </ControlGroup>
+      </Controls>
+      <Canvas bar={<><PanelTitle>Preview</PanelTitle><span style={{marginLeft:'auto',display:'flex',gap:4}}><IconButton size="sm" title="Refresh"><Icon name="refresh" size={13} /></IconButton><IconButton size="sm" title="Maximise"><Icon name="maximize" size={13} /></IconButton></span></>}>
+        <div style={{width:220,height:124,background:'var(--bg-1)',border:'1px solid var(--border-strong)',borderRadius:4}} />
+      </Canvas>
+    </ToolShell>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root-c-shell')).render(<Card />);
+</script></div></div></figure>
+<figure class="spec"><figcaption><span class="n">Identity</span><span class="s">Every glyph in the set, named — plus the marks and the product marks</span></figcaption><div class="body" id="c-identity"><div class="pane"><div id="root-c-identity"></div>
+<script type="text/babel">
+const { Icon, ICON_NAMES, ProductGlyph, PRODUCT_NAMES, Mark, InstrumentMark, Wordmark, PlayGlyph, PinGlyph, DragGlyph } = window.DCSWorkbenchDesignSystem_dafd54;
+
+function Card() {
+  return (
+    <div>
+      <div className="grid">
+        {ICON_NAMES.map(n => (
+          <span key={n} className="tile"><Icon name={n} size={16} /><span>{n}</span></span>
+        ))}
+      </div>
+      <div className="lbl">Filled — the only three</div>
+      <div className="row" style={{gap:16}}>
+        <span className="row" style={{gap:7,color:'var(--accent)'}}><PlayGlyph /><span className="cl">PlayGlyph · the Run verb</span></span>
+        <span className="row" style={{gap:7,color:'var(--accent)'}}><PinGlyph /><span className="cl">PinGlyph · pinned row</span></span>
+        <span className="row" style={{gap:7,color:'var(--fg-ghost)'}}><DragGlyph /><span className="cl">DragGlyph · reorder handle</span></span>
+      </div>
+      <div className="lbl">Product marks — not system glyphs, not in the set</div>
+      <div className="row" style={{gap:16}}>
+        {PRODUCT_NAMES.map(n => (
+          <span key={n} className="row" style={{gap:7,color:'var(--fg-dim)'}}>
+            <ProductGlyph name={n} size={18} /><span className="cl">{n}</span>
+          </span>
+        ))}
+        <span className="cl" style={{color:'var(--fg-ghost)'}}>Microsoft trademarks — only on the control that opens the product</span>
+      </div>
+      <div className="lbl">Marks</div>
+      <div className="row">
+        <span className="row" style={{gap:9}}><Mark letter="D" /><Mark letter="S" /><Mark letter="I" /><Mark letter="Q" /><span className="cl">L1 letter marks</span></span>
+        <span className="row" style={{gap:9}}><InstrumentMark /><span className="cl">L2 instrument mark</span></span>
+        <span className="row" style={{gap:9}}><Wordmark head="DCS" tail="PAD" /><span className="cl">wordmark</span></span>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root-c-identity')).render(<Card />);
+</script></div></div></figure>
+<h3>The inventory</h3>
+<div class="inv">
+<div class="g"><div class="h">controls</div><div class="l">Button · IconButton · Segmented · Microbar · MicrobarValue</div></div>
+<div class="g"><div class="h">forms</div><div class="l">Field · Input · Textarea · Select · Toggle · Check · Slider · Swatches · ResizeRail</div></div>
+<div class="g"><div class="h">navigation</div><div class="l">Tabs · Crumbs · Rail · RailLabel · RailItem · RailSep</div></div>
+<div class="g"><div class="h">data</div><div class="l">DataGrid · ListRow · NodeRow · NodeGlyph · NodeRoles · Tree · TreeNode</div></div>
+<div class="g"><div class="h">feedback</div><div class="l">Badge · Chip · CountPill · Kbd · Notice · Toast · State · Skeleton · ScanBar</div></div>
+<div class="g"><div class="h">overlay</div><div class="l">Menu · MenuLabel · MenuItem · MenuSep · Dialog · TipHost</div></div>
+<div class="g"><div class="h">shell</div><div class="l">AppShell · ToolShell · Panel · PanelTitle · Controls · ControlGroup · ControlRow · Canvas · Splitter</div></div>
+<div class="g"><div class="h">identity</div><div class="l">Icon · PlayGlyph · PinGlyph · DragGlyph · Mark · InstrumentMark · Wordmark</div></div>
+</div>
+<p style="margin-top:12px">Only capitalised exports reach the global namespace. <code>roleForFile</code> is a function, not a component — reach it as <code>NodeRoles.forFile(name)</code>.</p>
+<pre><span class="c">// React, via the compiled bundle</span>
+const { Button, Icon } = window.DCSWorkbenchDesignSystem_dafd54;
+
+<span class="c">// or plain HTML, via the sheet</span>
+&lt;button class="dcs-btn dcs-btn-primary"&gt;Run&lt;/button&gt;</pre>
+</section>
+
+<hr>
+<section id="templates">
+<div class="eyebrow">Build</div><h2>Templates</h2>
+<p>Three working shells. Copy the folder, keep the chrome, replace the content.</p>
+<table><tr><th>Template</th><th>Layer</th><th>What it gives you</th></tr>
+<tr><td class="mono"><a href="templates/dcspad/index.html">dcspad</a></td><td>L1</td><td>Three-pane takeover hosted under the SP suite bar — frameworks sidebar, editor tabs, preview and console.</td></tr>
+<tr><td class="mono"><a href="templates/sp-workbench/index.html">sp-workbench</a></td><td>L1</td><td>Grouped rail, breadcrumb page-shell header, data grids with the sorted-column spec.</td></tr>
+<tr><td class="mono"><a href="templates/compact-tool/index.html">compact-tool</a></td><td>L2</td><td>Single web part: <code>.dcs-tool</code> head, grouped control column, canvas with its own bar.</td></tr></table>
+</section>
+
+<hr>
+<section id="embedding">
+<div class="eyebrow">Build</div><h2>Embedding — living inside SharePoint without pretending to be it</h2>
+<h3>L1 · Takeover</h3>
+<p>The suite bar <strong>stays visible</strong>. That is deliberate: it says "this is running on your SharePoint, under your account." It is desaturated while the tool runs so it never competes. The app pins itself at <code>inset: 53px 5px 5px</code> and paints the surround itself with <code>box-shadow: 0 0 0 100vmax</code> — SP wrappers behind the gap have white backgrounds you cannot chase class-by-class. No outline on the app: the 5px gap and the 6px radius do that work.</p>
+<div class="note accent" style="margin-top:12px"><div class="t">Always ship a suspend path</div><p>When the host page enters edit mode, hide the tool and revert the global <code>html</code>/<code>body</code> overrides — or the editor canvas goes dark and unscrollable.</p></div>
+<h3>L2 · In a web part</h3>
+<p>Scope every rule. Never set <code>html</code>, <code>body</code>, or bare element selectors — the host page owns those, and a stray <code>body { overflow: hidden }</code> makes the whole page unscrollable. Declare tokens on the tool root, not <code>:root</code>: <code>.dcs-tool { --accent: … }</code>. That also lets two tools coexist on one page. Set an explicit min-height so the canvas doesn't collapse before content arrives, and stack the controls above the canvas below 720px.</p>
+<p><code>base.css</code> is for L1 takeover pages, the specimen cards, and the templates. <strong>An L2 web part imports <code>tokens/*.css</code> + <code>dcs-workbench.css</code> (+ <code>dcs-additions.css</code>) only.</strong></p>
+</section>
+
+<hr>
+<section id="voice">
+<div class="eyebrow">Practice</div><h2>Copy voice</h2>
+<p class="lede">A good engineer explaining a thing once, precisely, and then stopping.</p>
+<ul>
+<li><strong>Sentence case everywhere</strong> except panel/group titles and chip labels, which are uppercase with tracking. Never title case.</li>
+<li><strong>Second person, implied.</strong> "Enter an absolute https:// URL on this tenant." Not "Please enter…", not "The user must enter…". No "we".</li>
+<li><strong>Say the system state, not a feeling.</strong> "403 — the request digest expired. Retrying once." Not "Oops! Something went wrong."</li>
+<li><strong>Lead with the machine fact.</strong> Error strings start with the code: <code>404 — that list does not exist on this web</code>.</li>
+<li><strong>Empty states are one centred monospace line</strong> saying what would appear here and how to make it appear. No illustration, no mascot, no call-to-action card.</li>
+<li><strong>Notices name the specific object.</strong> "This folder already contains a file with that name." "Uploaded to /Code/tools/dcspad · v2.0."</li>
+<li><strong>Truncation and caps are disclosed</strong>, never silent: "Results are capped at 100 — a nextLink is available."</li>
+<li><strong>Buttons are verbs</strong>, one or two words: Run, Generate, Inspect, Export JS, Save snippet. The primary button names the thing it produces.</li>
+<li><strong>Units and paths inline, in mono</strong>, in the sentence: <code>243.9 KB · 2026-07-31</code>.</li>
+<li><strong>No exclamation marks, no emoji, no jokes in UI copy.</strong> Wit belongs in documentation, not in a status bar.</li>
+<li><strong>Keyboard convention stated once and honoured everywhere:</strong> <code>Ctrl/Cmd + Enter</code> always runs; <code>Esc</code> always steps back one level. Never bind a plain letter key.</li>
+</ul>
+</section>
+
+<hr>
+<section id="dodont">
+<div class="eyebrow">Practice</div><h2>Do / don't</h2>
+<table><tr><th>Topic</th><th>Do</th><th>Don't</th></tr>
+<tr><td class="mono">Accent budget</td><td class="y">One solid accent fill per screen — the Run / Generate / Upload verb. Everything else accented uses rail, hairline, soft wash, or glyph.</td><td class="n">Two filled accent buttons in the same view. If both matter, the secondary becomes <code>.dcs-btn-soft</code>.</td></tr>
+<tr><td class="mono">Surfaces</td><td class="y">Step bg-0 → bg-1 → bg-2 in order, separated by a 1px hairline.</td><td class="n">Invent a fifth grey, or use a shadow to separate two panels. Shadow means floating, not adjacent.</td></tr>
+<tr><td class="mono">Density</td><td class="y">Match the tier to the container: 28 topbar · 26 default · 22 panel head · 20 only inside an already-tight strip.</td><td class="n">Mix tiers in one row, or reach for 20px because a layout is crowded. A crowded layout is a layout problem.</td></tr>
+<tr><td class="mono">Labels</td><td class="y">Panel and group titles uppercase, 10px, 700, .14em, <code>--fg-dim</code>. Always.</td><td class="n">Sentence-case panel titles, or uppercase for anything longer than three words.</td></tr>
+<tr><td class="mono">Numbers and paths</td><td class="y">Monospace, right-aligned when they are quantities, copyable when they are identifiers.</td><td class="n">Set a GUID, size or server-relative path in the sans stack. It stops being scannable.</td></tr>
+<tr><td class="mono">Empty states</td><td class="y">One centred monospace line stating what would appear here and how to make it appear.</td><td class="n">An illustration, a mascot, or a call-to-action card.</td></tr>
+<tr><td class="mono">Errors</td><td class="y">Error text on <code>--error-bg</code> with an <code>--error</code> inset rail. The count pill on the tab tells you where.</td><td class="n">A modal for a recoverable error, or red text on the plain panel ground with no wash behind it.</td></tr>
+<tr><td class="mono">Icons</td><td class="y">16-grid, 1.4 stroke, currentColor, round joins. DCSPad first, Lucide second.</td><td class="n">Emoji, a webfont, a CDN sprite, or a filled glyph among the line ones.</td></tr>
+<tr><td class="mono">Colour meaning</td><td class="y">Colour a row only when the colour answers a question the label does not.</td><td class="n">Rainbow a list for visual interest. Twelve hues in a sidebar is noise, not a taxonomy.</td></tr>
+<tr><td class="mono">Scoping in a web part</td><td class="y">Declare tokens on the tool root and prefix every selector.</td><td class="n">Touch <code>html</code>, <code>body</code>, or bare element selectors. You will break the host page for everyone.</td></tr></table>
+</section>
+
+<hr>
+<section id="upgrades">
+<div class="eyebrow">Practice</div><h2>Recommended upgrades</h2>
+<p>Changes to <strong>existing repos</strong> — DCSPad, SP Workbench, Halo — not to the system sheet. Everything they call for already exists in <code>dcs-workbench.css</code>; the work is adoption.</p>
+<table><tr><th>#</th><th>Change</th><th>Where</th><th>Effort</th></tr>
+<tr><td class="mono">01</td><td>Coloured node glyphs everywhere a file tree appears — the SharePoint files dialog, the Browser picker, SP Workbench's Files grid. One shared helper, one role/type lookup.</td><td class="mono">sp-files.js · workbench/files.js · app.css</td><td class="mono">Small</td></tr>
+<tr><td class="mono">02</td><td>Adopt the slider in Halo. <code>.dcs-slider</code> already ships; swap Halo's bespoke range rules for it.</td><td class="mono">Halo generator</td><td class="mono">Small</td></tr>
+<tr><td class="mono">03</td><td>Group labels on the SP Workbench rail — Site / Content / Tools. One array change.</td><td class="mono">workbench/shell.js</td><td class="mono">Small</td></tr>
+<tr><td class="mono">04</td><td>A page-shell header for SP Workbench views: persistent breadcrumb bar, then eyebrow + title + hint per view.</td><td class="mono">workbench/shell.js</td><td class="mono">Medium</td></tr>
+<tr><td class="mono">05</td><td>Data-grid spec — accent underline on the sorted column, right-aligned mono quantities, copyable identifiers, no zebra.</td><td class="mono">workbench.css .wb-table</td><td class="mono">Medium</td></tr>
+<tr><td class="mono">06</td><td>The <code>.dcs-tool</code> shell for compact tools, plus the control-group primitives.</td><td class="mono">dcs-workbench.css</td><td class="mono">Medium</td></tr>
+<tr><td class="mono">07</td><td>Skeleton loading for the Files and Lists grids, in the grid's own shape.</td><td class="mono">workbench/grid.js</td><td class="mono">Small</td></tr>
+<tr><td class="mono">08</td><td>Two more file-type triples — json/data and doc.</td><td class="mono">app.css :root</td><td class="mono">Trivial</td></tr>
+<tr><td class="mono">09</td><td>Named motion durations — <code>--dur-tint</code> / <code>-move</code> / <code>-beat</code>.</td><td class="mono">app.css :root</td><td class="mono">Trivial</td></tr></table>
+<p style="margin-top:12px">Items 03, 04 and 05 are applied in <code>templates/sp-workbench/</code>; 08 and 09 are already in this system's token files.</p>
+</section>
+
+<hr>
+<section id="caveats">
+<div class="eyebrow">Practice</div><h2>Caveats</h2>
+<ul>
+<li><strong>No logo file was provided and none was drawn.</strong> The letter marks are the 4 × 5 grid strings the source document specifies, rendered — they are the spec, not an interpretation.</li>
+<li><strong>One webfont, added on request.</strong> The system references installed fonts by design. <code>tokens/fonts.css</code> is the exception: the real Cascadia Code (variable, 200–700), SIL OFL 1.1. The <code>src</code> leads with <code>local("Cascadia Code")</code>, so an installed copy still wins and a pasted-elsewhere tool falls back to Consolas / SF Mono / Menlo exactly as before. Segoe UI is simply referenced — it is on every machine that runs these tools, so there is nothing to ship.</li>
+<li><strong><code>dcs-workbench.css</code> is the source sheet verbatim</strong>, minus its <code>:root</code> block, which moved to <code>tokens/*.css</code> so the compiler can index it. No value, name or rule was altered. <code>assets/dcs-workbench.standalone.css</code> is the untouched original.</li>
+<li><strong>The L2 comp inlines its own round-thumb slider</strong> (<code>.hslider</code>) which differs from <code>.dcs-slider</code> in the sheet. The kit uses the sheet's version, since that is the named component; flagged rather than reconciled.</li>
+<li><strong>Contrast, flagged not changed:</strong> <code>--fg-faint</code> on <code>--bg-1</code> measures ≈3.5:1 — under WCAG AA for body text, fine for the incidental use the system assigns it.</li>
+<li><strong>Open decisions from the 2026-08-02 audit</strong> — bare element selectors in the sheet vs the L2 scoping rule; the <code>.dcs-canvas-stage</code> comment saying 8px where it draws 24px; two ADDED accent tokens the verbatim sheet cannot adopt; no sprite symbols for the two filled glyphs; dialogs seating a 26px Cancel beside a 28px primary; <code>.dcs-chip</code> being <code>cursor: pointer</code> even when inert. None breaks anything today. Full text in <code>readme.md</code>.</li>
+</ul>
+</section>
+
+</main></div>
+<script>
+(function(){var links=[].slice.call(document.querySelectorAll('.rail a[href^="#"]'));var map={};links.forEach(function(a){var s=document.getElementById(a.getAttribute('href').slice(1));if(s)map[s.id]=a;});
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on')});(map[e.target.id]||{classList:{add:function(){}}}).classList.add('on');}});},{rootMargin:'0px 0px -75% 0px'});
+Object.keys(map).forEach(function(id){io.observe(document.getElementById(id))});})();
+</script>
+</body></html>

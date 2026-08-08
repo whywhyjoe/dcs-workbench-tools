@@ -1,0 +1,52 @@
+<!-- @dsCard group="Components" viewport="700x400" name="Identity" subtitle="Every glyph in the set, named — plus the marks and the product marks" -->
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;padding:14px;background:var(--bg-0);color:var(--fg);font:var(--t-body)}
+.grid{display:grid;grid-template-columns:repeat(11,1fr);gap:6px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 2px;background:var(--bg-1);border:1px solid var(--border);border-radius:var(--radius-m);color:var(--fg-dim)}
+.tile span{font:8.5px/1.2 var(--mono);color:var(--fg-faint);text-align:center;word-break:break-word}
+.lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint);margin:14px 0 8px}
+.row{display:flex;gap:22px;flex-wrap:wrap;align-items:center}
+.cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint)}
+</style></head><body><div id="root"></div>
+<script type="text/babel">
+const { Icon, ICON_NAMES, ProductGlyph, PRODUCT_NAMES, Mark, InstrumentMark, Wordmark, PlayGlyph, PinGlyph, DragGlyph } = window.DCSWorkbenchDesignSystem_dafd54;
+
+function Card() {
+  return (
+    <div>
+      <div className="grid">
+        {ICON_NAMES.map(n => (
+          <span key={n} className="tile"><Icon name={n} size={16} /><span>{n}</span></span>
+        ))}
+      </div>
+      <div className="lbl">Filled — the only three</div>
+      <div className="row" style={{gap:16}}>
+        <span className="row" style={{gap:7,color:'var(--accent)'}}><PlayGlyph /><span className="cl">PlayGlyph · the Run verb</span></span>
+        <span className="row" style={{gap:7,color:'var(--accent)'}}><PinGlyph /><span className="cl">PinGlyph · pinned row</span></span>
+        <span className="row" style={{gap:7,color:'var(--fg-ghost)'}}><DragGlyph /><span className="cl">DragGlyph · reorder handle</span></span>
+      </div>
+      <div className="lbl">Product marks — not system glyphs, not in the set</div>
+      <div className="row" style={{gap:16}}>
+        {PRODUCT_NAMES.map(n => (
+          <span key={n} className="row" style={{gap:7,color:'var(--fg-dim)'}}>
+            <ProductGlyph name={n} size={18} /><span className="cl">{n}</span>
+          </span>
+        ))}
+        <span className="cl" style={{color:'var(--fg-ghost)'}}>Microsoft trademarks — only on the control that opens the product</span>
+      </div>
+      <div className="lbl">Marks</div>
+      <div className="row">
+        <span className="row" style={{gap:9}}><Mark letter="D" /><Mark letter="S" /><Mark letter="I" /><Mark letter="Q" /><span className="cl">L1 letter marks</span></span>
+        <span className="row" style={{gap:9}}><InstrumentMark /><span className="cl">L2 instrument mark</span></span>
+        <span className="row" style={{gap:9}}><Wordmark head="DCS" tail="PAD" /><span className="cl">wordmark</span></span>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Card />);
+</script></body></html>

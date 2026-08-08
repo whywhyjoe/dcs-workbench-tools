@@ -1,0 +1,20 @@
+<!-- @dsCard group="Motion" viewport="700x170" subtitle="Three ways to say "still working", and when each is right" name="Pending states" -->
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>body{background:var(--bg-0);padding:16px;font:var(--t-body);color:var(--fg)}
+.g{display:grid;gap:10px}.r{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.note{font:10.5px/1.5 var(--sans);color:var(--fg-faint);text-wrap:pretty}
+.lbl{font:var(--t-panel);letter-spacing:var(--ls-panel);text-transform:uppercase;color:var(--fg-faint)}
+.cl{font:500 10.5px/1 var(--mono);color:var(--fg-faint)}
+.col{display:flex;flex-direction:column;gap:8px}
+</style></head><body><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+<div class="g"><div class="lbl">Scan bar</div>
+<div class="is-pending" style="position:relative;overflow:hidden;height:30px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-m);display:flex;align-items:center;padding:0 12px"><span class="lbl" style="color:var(--fg-dim)">Preview</span><span class="dcs-scanline"></span></div>
+<div class="note">A run is in flight and the surface it affects is already on screen.</div></div>
+<div class="g"><div class="lbl">Skeleton</div>
+<div style="display:grid;gap:6px"><i class="dcs-skel" style="width:70%"></i><i class="dcs-skel" style="width:92%;animation-delay:.1s"></i><i class="dcs-skel" style="width:54%;animation-delay:.2s"></i></div>
+<div class="note">Only where the shape is known in advance — grid rows, cards. Otherwise use the spinner.</div></div>
+<div class="g"><div class="lbl">Spinner</div>
+<div style="display:flex;align-items:center;gap:10px;height:30px"><i style="width:17px;height:17px;border:2px solid var(--border-strong);border-top-color:var(--accent);border-radius:50%;animation:dcs-spin .75s linear infinite;display:block"></i><span style="font:12px/1 var(--mono);color:var(--fg-faint)">Reading schema…</span></div>
+<div class="note">Shape unknown. Pair it with a line saying what is being read.</div></div>
+</div></body></html>

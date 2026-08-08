@@ -1,0 +1,46 @@
+/* ── DCS Workbench · type ──────────────────────────────────────────────────
+   Two families and a rule for which is which. Sans is for prose and UI
+   labels. Mono is for anything a machine produced or will consume — URLs,
+   paths, GUIDs, sizes, timestamps, code, counts, status text.
+   Sans is Segoe UI, referenced and never shipped: every machine that runs
+   these tools is a Windows / M365 machine and already has it. Mono leads
+   with the locally-installed Cascadia Code; the one @font-face in the system
+   (tokens/fonts.css) only covers the machine that does not have it.
+   The two stacks are the source sheet's. The ramp shorthands are ADDED
+   names for the exact sizes the source specimen lists, as are the two
+   ligature tokens.
+   ------------------------------------------------------------------------ */
+:root {
+  --mono: "Cascadia Code", "Consolas", "SF Mono", Menlo, monospace; /* @kind font */
+
+  /* Ligatures, ON. Cascadia Code's coding ligatures (=> !== <= ->) are
+     contextual alternates; browsers leave calt on by default but a host page
+     or a UA stylesheet can switch it off, and form controls opt out on their
+     own. These two tokens say it out loud so a tool can turn it back on with
+     one declaration. Applied in base.css and dcs-additions.css § 6. */
+  --mono-ligatures: contextual common-ligatures; /* @kind other */
+  --mono-features: "calt" 1, "liga" 1; /* @kind other */
+  --sans: "Segoe UI", system-ui, sans-serif; /* @kind font */
+
+  /* Sans ramp */
+  --t-section: 600 26px/1.25 var(--sans);   /* section heading */
+  --t-view: 600 17px/1.3 var(--sans);       /* view title */
+  --t-title: 600 15px/1.3 var(--sans);      /* dialog title, card title */
+  --t-body: 400 13px/1.6 var(--sans);       /* body and menu rows */
+  --t-control: 500 12.5px/1 var(--sans);    /* buttons and rail items */
+  --t-label: 500 11.5px/1.2 var(--sans);    /* field labels */
+  --t-panel: 700 10px/1 var(--sans);        /* panel title — + .14em, uppercase */
+  --t-group: 700 9.5px/1 var(--sans);       /* group title — + .14em, uppercase */
+  --t-chip: 600 9.5px/1 var(--sans);        /* chip label — + .06em, uppercase */
+  --ls-panel: .14em;
+  --ls-chip: .06em;
+
+  /* Mono ramp */
+  --t-wordmark: 700 15px/1 var(--mono);     /* + .02em */
+  --t-code: 400 12.5px/1.55 var(--mono);
+  --t-path: 400 12px/1.5 var(--mono);
+  --t-meta: 500 11.5px/1.5 var(--mono);     /* sizes, timestamps */
+  --t-status: 500 11px/1 var(--mono);       /* + .04em */
+  --t-count: 700 10px/1 var(--mono);
+  --t-badge: 600 9px/1.3 var(--mono);       /* file-type pill — + .06em, uppercase */
+}
