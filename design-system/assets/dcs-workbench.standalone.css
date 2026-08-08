@@ -1,3 +1,4 @@
+/*! DCS Workbench Design System · v1.0.0 · assets/dcs-workbench.standalone.css */
 /* ============================================================================
    DCS WORKBENCH — design system starter
    v1.0 · internal developer tooling · dark only
@@ -19,6 +20,11 @@
 
 :root {
   color-scheme: dark;
+
+  /* Shipped version, readable at runtime even from a copy pasted inline:
+       getComputedStyle(document.documentElement).getPropertyValue('--ds-version')
+     Never hand-edit: run tools/set-version.py. */
+  --ds-version: "1.0.0";
 
   /* --- surfaces ------------------------------------------------------- */
   --bg-0: #14161b;          /* app ground, gutters, splitter tracks */

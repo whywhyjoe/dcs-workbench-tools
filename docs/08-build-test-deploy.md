@@ -121,12 +121,29 @@ The script's shape, worth copying:
 5. **Guard against accidental nesting** (`src\src`, `styles\styles`) from a
    previous mis-run.
 
-A sibling pattern worth knowing from the BSP repo: a `VERSION` file is the
-source of truth, a script stamps it into each shipped file's banner and into a
-`--ds-version` custom property, and the deploy **refuses a dirty tree or a
-version/stamp mismatch**. A live page can then report its own version from
-`getComputedStyle(document.documentElement).getPropertyValue('--ds-version')`.
-Adopt that for any library other apps consume.
+### Versioning a shared library
+
+Anything other apps consume gets a version stamp, so a live page can say which
+copy it is running. Both design systems now do this: a `VERSION` file as the
+source of truth, a script that stamps it into each shipped file's banner and
+into a `--ds-version` custom property, and a check that fails on a mismatch.
+
+```bash
+# DCS Workbench design system
+python design-system/tools/set-version.py 1.1.0    # bump and stamp
+python design-system/tools/set-version.py --check  # deploy gate
+```
+
+```js
+// from any live page running a stamped copy
+getComputedStyle(document.documentElement).getPropertyValue('--ds-version')
+```
+
+**Never hand-edit a stamp**, and after a bump re-sync every consumer that
+carries its own copy — for the design system that is Halo's vendored sheet plus
+its inlined `<style>` block (`cp` the standalone build over it, then re-run
+`inline-css.py`). A consumer left un-synced ships a stale version string, which
+is worse than no stamp at all.
 
 ### Deploy checklist
 

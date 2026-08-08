@@ -62,6 +62,7 @@ body div.ControlZone:has(sp-webpart-options[no-margin]) {
 <style id="dcs-workbench">
 /* @inline dcs-workbench.css - generated block, do not hand-edit.
   Edit the sibling dcs-workbench.css and re-run: python inline-css.py */
+/*! DCS Workbench Design System · v1.0.0 · assets/dcs-workbench.standalone.css */
 /* ============================================================================
    DCS WORKBENCH — design system starter
    v1.0 · internal developer tooling · dark only
@@ -83,6 +84,11 @@ body div.ControlZone:has(sp-webpart-options[no-margin]) {
 
 :root {
   color-scheme: dark;
+
+  /* Shipped version, readable at runtime even from a copy pasted inline:
+       getComputedStyle(document.documentElement).getPropertyValue('--ds-version')
+     Never hand-edit: run tools/set-version.py. */
+  --ds-version: "1.0.0";
 
   /* --- surfaces ------------------------------------------------------- */
   --bg-0: #14161b;          /* app ground, gutters, splitter tracks */

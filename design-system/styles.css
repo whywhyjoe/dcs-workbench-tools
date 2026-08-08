@@ -1,3 +1,4 @@
+/*! DCS Workbench Design System · v1.0.0 · styles.css */
 /* DCS Workbench — global entry point. @import list only; link this one file.
    An L2 web part links tokens/*.css + dcs-workbench.css (+ dcs-additions.css)
    and skips base.css — see readme.md § Embedding. */

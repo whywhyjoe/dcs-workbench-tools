@@ -45,6 +45,43 @@ token files and listed under *Intentional additions* below.
 | `templates/` | Starting points for consuming projects — `dcspad/` (L1), `sp-workbench/` (L1), `compact-tool/` (L2) |
 | `thumbnail.html` | The system's homepage tile |
 | `SKILL.md` | Agent-Skills entry point |
+| `VERSION` | The shipped version — single source of truth |
+| `tools/set-version.py` | Stamps `VERSION` into every shipped file. See *Versioning* below. |
+
+---
+
+## Versioning
+
+`VERSION` is the source of truth. `tools/set-version.py` propagates it into the
+two places a **deployed** copy can be read from without git: the `/*! … */`
+banner on line 1 of each shipped CSS/JS, and the `--ds-version` custom property
+in `tokens/colors.css` and `assets/dcs-workbench.standalone.css`.
+
+```bash
+python tools/set-version.py 1.1.0    # set a new version and stamp everything
+python tools/set-version.py          # re-stamp current VERSION (repairs drift)
+python tools/set-version.py --check  # verify only; non-zero exit on drift
+```
+
+Any live page can then answer which version it is running:
+
+```js
+getComputedStyle(document.documentElement).getPropertyValue('--ds-version')
+```
+
+**Never hand-edit a stamp** — run the script, or the files drift and `--check`
+starts failing. `--check` is the deploy gate; run it before shipping. It also
+catches a newly added sheet that was never added to the script's `STAMPED` list.
+
+After a bump, **re-sync the consumers that carry their own copy**:
+
+```bash
+cp assets/dcs-workbench.standalone.css ../halo-banner/dcs-workbench.css
+cd ../halo-banner && python inline-css.py
+```
+
+Otherwise Halo ships a stale version string — which is exactly the ambiguity the
+stamp exists to remove.
 
 ### Components
 

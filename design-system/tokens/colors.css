@@ -1,3 +1,4 @@
+/*! DCS Workbench Design System · v1.0.0 · tokens/colors.css */
 /* ── DCS Workbench · colour ────────────────────────────────────────────────
    One accent. Everything else is grey or a signal.
    Every name and value below is transcribed from the source sheet
@@ -10,6 +11,13 @@
    ------------------------------------------------------------------------ */
 :root {
   color-scheme: dark;
+
+  /* The shipped version, readable at runtime from a deployed copy:
+       getComputedStyle(document.documentElement).getPropertyValue('--ds-version')
+     It lives in this file rather than a file of its own because colours are the
+     first import and the one sheet every consumer takes — including an L2 web
+     part that skips base.css. Never hand-edit: run tools/set-version.py. */
+  --ds-version: "1.0.0";
 
   /* Surfaces — four steps, in order. Never skip one to create contrast;
      add a hairline instead. */

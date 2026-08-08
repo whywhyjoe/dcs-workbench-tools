@@ -1,3 +1,4 @@
+/*! DCS Workbench Design System · v1.0.0 · assets/icons.js */
 /* DCS Workbench icon sprite — self-injecting.
    <script src="assets/icons.js"></script> in <head>, then anywhere:
      <svg width="15" height="15" aria-hidden="true"><use href="#dcs-folder"></use></svg>

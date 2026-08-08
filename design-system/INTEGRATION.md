@@ -111,13 +111,13 @@ and `sp-dcspad/styles/app.css`.)
 
 ## Open items
 
-- **No version stamp.** Nothing ties the split sheets, the standalone build, and
-  the copies inlined into shipped tools to one version. The `bsp-design-system`
-  pattern is worth copying: a `VERSION` file as source of truth, a script that
-  stamps it into each file's banner and into a `--ds-version` custom property,
-  and a deploy that refuses a stamp mismatch — so a live page can report which
-  version it is running. This is the thing that prevents the next round of
-  "which copy is this?".
+- ~~**No version stamp.**~~ **Done.** `VERSION` (currently `1.0.0`) is the
+  source of truth; `tools/set-version.py` stamps it into the banner of all 12
+  shipped CSS/JS files and into `--ds-version` in `tokens/colors.css` and the
+  standalone build. `--check` is the deploy gate. Full workflow in
+  [`readme.md` § Versioning](readme.md). Halo's vendored copy and its inlined
+  `<style>` block were re-synced at the same time, so a live Halo page reports
+  the version too.
 - **No Alpine state contract.** Now that Alpine is viable in this hosting model
   ([`../docs/06-alpine.md`](../docs/06-alpine.md)), the system should document
   which classes and attributes bindings drive — `.is-active`, `.is-dragging`,
