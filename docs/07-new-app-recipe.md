@@ -19,7 +19,10 @@ The order of operations, and a skeleton to copy the *shape* of.
    expensive mistake in this document.
 2. **Ask for the deployment URLs.** The container path, the tools base, the
    design-system location, the File Broker release. Do not infer them from a
-   repo — repo URLs are wrong.
+   repo — repo URLs are wrong. **If the answer is two sets of URLs** (a dev site
+   and a prod site), adopt the environment-aware deploy pattern in
+   [`08-build-test-deploy.md`](08-build-test-deploy.md) from the start — it is
+   cheap to build in and closes a silent deploy-#2 failure.
 3. **Decide what the app stores**, if anything. If nothing, you may be L2.
 4. **Decide whether it touches files.** If yes, it uses the File Broker
    ([`04-file-broker.md`](04-file-broker.md)) — do not plan file I/O.

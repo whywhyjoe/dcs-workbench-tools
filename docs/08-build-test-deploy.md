@@ -102,8 +102,10 @@ What earns a suite, based on what has actually broken here:
 ## Deploying
 
 Deployment is a **pure copy of runtime files into a SharePoint-synced folder**.
-No transformation, no packaging step, no environment substitution — what is in
-the folder is what runs.
+No transformation, no packaging step — what is in the folder is what runs. (The
+one exception is the `.webpart.html` entry file when an app targets more than
+one environment; see below. Its absolute URL is site-specific by definition, so
+it is the only thing a deploy may generate.)
 
 ```powershell
 deploy\Sync-Live.ps1 [-LivePath <synced folder>]
@@ -120,6 +122,80 @@ The script's shape, worth copying:
    `plans/`, no `.md`. Production should be byte-identical to the tag.
 5. **Guard against accidental nesting** (`src\src`, `styles\styles`) from a
    previous mis-run.
+
+### Deploying to more than one environment (recommended pattern)
+
+**Recommended, not required.** Evaluate it when an app deploys to more than one
+tenant location — a dev site and a prod site. An app with a single deployment
+target can skip it, and an L2 instrument pasted into one page almost certainly
+should. Do not retrofit an app that is happily single-target.
+
+**The trap it exists to close.** An L1 app's only site-specific line is the
+absolute `<script src>` in its `.webpart.html`
+([`01-hosting-and-boot.md`](01-hosting-and-boot.md)), and its runtime config
+document is seeded once and then edited in place. That is clean for one
+environment. Add a second and the repo has no concept of *which* — so a deploy
+script that force-copies the repo's placeholder `.webpart.html` over the live
+folder **silently overwrites the hand-edited live URL on every sync after the
+first**. Deploy #1 works, you hand-fix the URL, and deploy #2 breaks the page
+with no error and nothing in the diff to look at. Reference implementation, where
+this was hit and solved: `whywhyjoe/sp-traffic-analytics`
+(`deploy/Sync-Live.ps1`, `deploy/environments.sample.json`).
+
+**1 · A gitignored `deploy/environments.json`, with a committed
+`deploy/environments.sample.json` template.** One entry per target:
+
+```json
+{
+  "$comment": "Copy to deploy/environments.json (gitignored) and fill in.",
+  "dev": {
+    "livePath": "C:\\...\\Dev Site - Documents\\SiteAssets\\<app>",
+    "deployedBaseUrl": "https://<tenant>.sharepoint.com/sites/<DevSite>/SiteAssets/<app>/",
+    "siteURL": "/sites/<DevSite>/"
+  },
+  "prod": { "…": "…" }
+}
+```
+
+Add whatever else that environment must seed into the config document
+(a File Broker release URL, a catalog URL). **Gitignoring the real file is what
+keeps this compatible with the non-negotiable "never hardcode a tenant URL in
+source"** — the committed sample carries placeholders only.
+
+**2 · The script takes `-Environment <name>`, per invocation.** Deliberately a
+flag, not a sticky "current environment" file: with dev and prod both live, a
+mode you forgot to switch back is worse than typing four characters. Per
+environment it:
+
+- **resolves `livePath`**, and fails with an actionable message if the
+  environments file, the named entry, its `livePath`, or the folder is missing;
+- **generates the `.webpart.html` entry file(s)** into the live folder by
+  rewriting the script-URL prefix to `deployedBaseUrl` **while preserving the
+  repo copy's `?v=` value**. That keeps the boot cache-bump rule a single edit
+  in the repo that propagates to every environment. Throw if the `src` pattern
+  isn't found rather than writing an unchanged file — a silent no-op here is the
+  same failure in a new costume;
+- **seeds the runtime config document from the environment entry on first
+  deploy only.** If a config already exists in the live folder, leave it alone
+  and say so. It is operational configuration that gets edited in place.
+
+A plain `-LivePath` fallback may remain for one-offs, but it must **warn
+loudly** that the verbatim-copied `.webpart.html` still carries its placeholder
+and that the next verbatim deploy will clobber any hand-edit.
+
+**3 · Nothing else becomes environment-aware.** This is the part that keeps the
+pattern cheap:
+
+- `boot.js` still resolves every asset from its own script URL — it has no idea
+  which environment it is in, and must not gain one.
+- Runtime code still reads the config document. No build-time substitution, no
+  `if (isDev)`.
+- **Local development still needs no environments file at all** — the standalone
+  shell plus mock data, exactly as before.
+
+The environments file feeds the deploy step and nothing else. If you find
+yourself threading an environment name into application code, the pattern has
+been misapplied.
 
 ### Versioning a shared library
 

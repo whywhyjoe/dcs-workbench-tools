@@ -21,6 +21,7 @@ _Last reviewed: 2026-08-08._
 | 7 | `design-system/uploads/` is authoring scratch | `design-system/` | low |
 | 8 | Deployment docs duplicated in `sp-dcspad` | `sp-dcspad` | low |
 | 9 | DCSPad's `:root` hasn't converged on the system | `sp-dcspad` | low / optional |
+| 10 | The multi-environment deploy pattern's only worked example lives outside the family repos | `docs/` | low |
 
 ---
 
@@ -128,6 +129,21 @@ genuinely app-specific variables (the JS-set layout ones: `--sidebar-w`,
 `--diag-h`, `--editors-w`, `--preview-h`, `--runtime-w`, `--diag-fs`). Worth
 doing when something else already requires touching `app.css`; not worth a
 dedicated change.
+
+## 10 · The multi-environment deploy pattern's only worked example lives outside the family repos
+
+[`docs/08-build-test-deploy.md`](docs/08-build-test-deploy.md) documents the
+environment-aware deploy pattern and cites `whywhyjoe/sp-traffic-analytics` as
+the reference implementation. None of the three primary repos uses it —
+correctly, since none of them deploys to more than one target and the pattern is
+explicitly not to be retrofitted.
+
+The consequence is only that if that repo moves, goes private, or is rewritten,
+the doc's one concrete example goes with it. The prose is self-contained enough
+to implement from, so this is a durability note, not a gap.
+
+**Done looks like:** nothing, unless that repo becomes unreachable — in which
+case inline a trimmed `Sync-Live.ps1` excerpt into the doc.
 
 ---
 

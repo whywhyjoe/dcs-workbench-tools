@@ -42,6 +42,12 @@ Two meaningful lines. This is the file the web part's Script URL points at, and
   `<div>` keeps SharePoint's global link theming and sanitizers away from it.
 - The `<script src>` is **the only site-specific line in the entire app**. Every
   other path is resolved from it at runtime.
+- "Never needs to change again" holds **per deployment target**. An app that
+  ships to more than one — a dev site and a prod site — needs one of these per
+  environment, and hand-editing the live copy is a trap: the next deploy copies
+  the repo's placeholder straight over it. Generate the file per environment
+  instead; see *Deploying to more than one environment* in
+  [`08-build-test-deploy.md`](08-build-test-deploy.md).
 - The `?v=` is the *only* cache-buster for boot itself, because boot sits below
   the versioning layer it implements. **Changing `boot.js` means bumping `?v=`
   in this file**, or browsers keep the old boot for up to a day.
