@@ -19,6 +19,7 @@ touches. Each file is sized to be read whole.
 
 | Doc | Read it when |
 | --- | --- |
+| [`START-A-BUILD.md`](START-A-BUILD.md) | **Starting a new app session.** A copy-paste kickoff prompt that points Claude at this method. |
 | [`00-system-model.md`](00-system-model.md) | **Always first.** What a DCS app is, the L1/L2 tier model, the non-negotiables, how to pick a tier. |
 | [`01-hosting-and-boot.md`](01-hosting-and-boot.md) | You are creating a new app, changing how one loads, or debugging "it's blank in view mode / stale after deploy / silently runs nothing". |
 | [`02-composition.md`](02-composition.md) | You are laying out an app's modules, adding a view, adding a config key, or deciding where state lives. |
