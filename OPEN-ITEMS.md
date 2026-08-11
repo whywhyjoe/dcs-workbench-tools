@@ -22,6 +22,7 @@ _Last reviewed: 2026-08-08._
 | 8 | Deployment docs duplicated in `sp-dcspad` | `sp-dcspad` | low |
 | 9 | DCSPad's `:root` hasn't converged on the system | `sp-dcspad` | low / optional |
 | 10 | The multi-environment deploy pattern's only worked example lives outside the family repos | `docs/` | low |
+| 11 | The push & deploy pipeline (dcs-dev-relay) is new and unproven on the tenant | `dcs-dev-relay` | medium |
 
 ---
 
@@ -144,6 +145,30 @@ to implement from, so this is a durability note, not a gap.
 
 **Done looks like:** nothing, unless that repo becomes unreachable — in which
 case inline a trimmed `Sync-Live.ps1` excerpt into the doc.
+
+## 11 · The push & deploy pipeline (dcs-dev-relay) is new and unproven on the tenant
+
+Co-development (git bundles through a OneDrive-synced SharePoint relay
+library) and release deployment (staged `git archive` trees uploaded
+in-browser with per-file BuildId/GitSha metadata) now live in the
+`dcs-dev-relay` repo — Node CLI, pure planning engine, a standalone raw-`_api`
+client with chunked upload, the L2 uploader page, an Edge policy probe page,
+and a runbook. It follows this repo's method (raw `_api` fetch per
+[`docs/03`](docs/03-sharepoint-data.md), halo-shaped single-payload hosting
+per [`docs/01`](docs/01-hosting-and-boot.md)), and everything below the
+DOM/network line is covered by ~100 headless tests plus a scripted demo walk
+— but none of it has run against the tenant. Known live-tenant unknowns are
+flagged in its `docs/live-checklist.md`: the Edge File System Access policy
+verdict (probe page not yet run on a locked-down machine), and the
+`CreateFieldAsXml` nometadata payload shape. Related: item 3 — the relay
+runbook tells deployers to run `set-version.py --check` before staging a
+design-system release, but as a runbook step, not an enforced gate, because
+the pipeline deploys arbitrary repos.
+
+**Done looks like:** the probe run on a real locked-down Edge profile,
+`dcs-dev-relay/docs/live-checklist.md` completed end-to-end once in a
+disposable folder (record committed), and the relay + asset library columns
+provisioned.
 
 ---
 

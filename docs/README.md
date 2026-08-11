@@ -45,6 +45,7 @@ Read the code, not just these docs. In rough order of how much they teach:
 | **DCS File Broker** | `dcs-workbench-tools/dcs-file-picker` | component | The provider contract, versioned ES-module distribution, headless-testable design. |
 | **Halo Banner Maker** | `dcs-workbench-tools/halo-banner` | L2 | The single-payload pasted-in tool, `<sp-webpart-options>` hosting, graceful degradation when an optional dependency is missing. |
 | **SP Traffic Analytics** | `sp-traffic-analytics` | L1 | The environment-aware deploy pattern — gitignored `environments.json`, generated per-environment `.webpart.html`, seed-once config. See [`08-build-test-deploy.md`](08-build-test-deploy.md). |
+| **DCS Dev Relay** | `dcs-dev-relay` | tooling | Git-bundle co-development through a synced SharePoint relay library, and the in-browser release uploader (chunked raw-`_api` upload, per-file BuildId/GitSha deploy metadata, leaf-first ordering). Start with its README and `docs/runbook.md`. |
 
 Each has its own `CLAUDE.md` / `AGENTS.md` with rules and paid-for gotchas
 specific to it. **Those files win over this one** for their own app. This doc
