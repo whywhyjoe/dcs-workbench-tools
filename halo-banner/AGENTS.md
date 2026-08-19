@@ -44,6 +44,16 @@ chrome goes in `halo-overrides.css`. Nothing else may go in `halo-banner-css`.
 and re-run it. `dcs-workbench.css` is a vendored kit — treat it as read-only and put every
 deviation in `halo-overrides.css` with a comment saying why.
 
+Read-only means *do not edit it here*. It does not mean frozen: when the kit itself needs a
+change, make it upstream in `dcs-workbench-design-system` (both `dcs-workbench.css` and
+`assets/dcs-workbench.standalone.css`, which must stay identical below the header), then
+re-vendor the standalone file over this copy and re-run `inline-css.py`. The vendored copy
+must stay byte-identical to upstream's standalone apart from line endings — check with
+`diff <(cat …/assets/dcs-workbench.standalone.css) <(tr -d '
+' < dcs-workbench.css)`.
+A local edit here is invisible to every other tool and gets silently reverted by the next
+re-vendor.
+
 **3. The halo geometry constants come from the source `.ai` file and are load-bearing.**
 
 - outer diameter `1210.1213` units at scale 1, expressed as `118.1759cqw`

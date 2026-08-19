@@ -250,6 +250,41 @@ python inline-css.py
 HTML. It is also the **banner component itself** — that block is bundled into every copied
 snippet, so changing it changes what everyone pastes.
 
+## Hosting: the page takeover
+
+Halo's tool root carries `dcs-tool-hosted`:
+
+```html
+<div class="dcs-tool dcs-tool-hosted webpart-content" data-halo-generator>
+```
+
+That is a kit feature, not a Halo one — it is documented in the design system under
+Embedding. It turns the page Halo is pasted onto into a dark surround: `html`, `body` and
+`#SPPageChrome` get `--surround`, every wrapper between `body` and the tool stops painting,
+and the web part's gutter goes to zero. Without it the tool's 6px radius shows the white of
+whichever SharePoint wrapper happens to sit behind it — usually `.ControlZone`, which is why
+darkening `[data-automation-id="CanvasZone"]` by hand does not fix it.
+
+It paints ground and nothing else. Hiding the command bar, page nav and hub nav is the host
+page's job, not Halo's.
+
+**The host page must suspend it in edit mode.** Halo has no edit-mode detection of its own,
+so whatever puts the page into editing has to add `dcs-suspended` to `<body>`, or the author
+ends up editing a dark canvas:
+
+```js
+if (new URLSearchParams(location.search).has('mode')) {
+  document.body.classList.add('editmode', 'dcs-suspended');
+}
+```
+
+Drop `dcs-tool-hosted` from the markup if Halo ever has to share a page with other web
+parts — it is a whole-page effect, and one instrument should not darken its neighbours.
+
+Halo also sets `height: 100vh` (`halo-overrides.css`). In flow under the suite bar that
+overflows the viewport by the bar's height, so the page scrolls a little. Set a smaller
+height there if that bothers you; the takeover deliberately does not touch height.
+
 ## Deploying
 
 1. Update the JS at the SharePoint path in `halo-banner-maker.html` line 10. Note the
