@@ -270,8 +270,9 @@ html.dcs-hosted #SuiteNavWrapper { filter: grayscale(1) brightness(.6); }
 
 /* ============================================================================
    L2 — INSTRUMENT SHELL (single-purpose tool inside one web part)
-   No takeover, no status bar, no splitters. It paints its own dark ground
-   so it reads as an instrument dropped onto the page, not a themed page.
+   No status bar, no splitters, and by default no takeover. It paints its
+   own dark ground so it reads as an instrument dropped onto the page, not
+   a themed page. See the takeover block below for the opt-in exception.
    ========================================================================= */
 
 .dcs-tool {
@@ -281,6 +282,67 @@ html.dcs-hosted #SuiteNavWrapper { filter: grayscale(1) brightness(.6); }
   font: 13px/1.5 var(--sans);
   overflow: hidden;
 }
+
+/* --- optional page takeover -------------------------------------------
+   L2's default seat is in flow inside one web part, sharing the page with
+   whatever else the author put there. That stays the right answer, and
+   this is the opt-in exception: a page whose only job is to host one
+   instrument. It darkens everything around the tool and clears the white
+   out from behind it — but the tool never leaves the flow. No fixed
+   position, no viewport pinning, no chrome of its own. A tool that needs
+   those has become L1; give it a letter.
+
+   Opt in from markup alone, on the tool root:
+
+     <div class="dcs-tool dcs-tool-hosted"> … </div>
+
+   No boot script, because these tools get pasted whole into a custom
+   script web part and often have no JS of their own. Everything below is
+   gated on :has(), so the same file opened standalone from disk is fine:
+   there is no #SPPageChrome to paint and the wrapper sweep matches only
+   the handful of divs that really are ancestors.
+
+   HIDING SharePoint's own chrome — command bar, page nav, hub nav — is
+   deliberately not here. That is a page-level decision the host page
+   makes for every web part on it, not something one instrument may do to
+   its neighbours. This block only paints ground.
+
+   Suspend it the moment the host page enters edit mode by putting
+   .dcs-suspended on <body> (or on the tool root), or the author edits a
+   dark, unreadable canvas. Same rule as L1. */
+
+html:has(.dcs-tool-hosted):not(:has(.dcs-suspended)),
+html:has(.dcs-tool-hosted):not(:has(.dcs-suspended)) body,
+html:has(.dcs-tool-hosted):not(:has(.dcs-suspended)) #SPPageChrome {
+  background: var(--surround);
+}
+
+/* The white-corner fix. A 6px radius shows whatever is painted directly
+   behind the tool, and behind it is a stack of canvas, section, zone and
+   control wrappers, any one of which a tenant theme or a section
+   background may have painted white. Chasing them by class is the losing
+   game L1 answered with a 100vmax shadow; in flow there is no shadow to
+   spread, so instead every ancestor of the tool paints nothing and the
+   surround above becomes the only ground under the radius. `body *` keeps
+   html and body out of the subject list — those two are painted, not
+   cleared. */
+html:has(.dcs-tool-hosted):not(:has(.dcs-suspended)) body *:has(.dcs-tool-hosted) {
+  background: transparent !important;
+}
+
+/* SP spaces web parts for a page of stacked content. A takeover page has
+   one, and wants the gutter gone. */
+html:has(.dcs-tool-hosted):not(:has(.dcs-suspended)) body *:has(> .dcs-tool-hosted) {
+  margin: 0 !important; padding: 0 !important;
+}
+
+/* The suite bar stays, for the same reason it stays in L1 — it says this
+   is running on your SharePoint, under your account — and is desaturated
+   so a brightly themed tenant bar does not outshout the tool. */
+html:has(.dcs-tool-hosted):not(:has(.dcs-suspended)) #SuiteNavWrapper {
+  filter: grayscale(1) brightness(.6);
+}
+
 .dcs-tool-head {
   display: flex; align-items: center; gap: 10px; flex: none;
   min-height: 40px; padding: 0 10px 0 14px;
@@ -1353,7 +1415,7 @@ a:hover { color: var(--accent-hi); text-decoration: underline; }
   <b>Halo webpart generator.</b> Ensure web part is placed above the fold on the page. Lower placement will delay loading and cause unexpected behavior.
 </div>
 
-<div class="dcs-tool webpart-content" data-halo-generator>
+<div class="dcs-tool dcs-tool-hosted webpart-content" data-halo-generator>
 <div class="dcs-tool-head">
 <span class="dcs-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
 <span class="dcs-tool-title">Halo <b>Banner Generator</b></span>
