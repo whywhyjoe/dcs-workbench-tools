@@ -22,6 +22,7 @@ _Last reviewed: 2026-08-08._
 | 8 | Deployment docs duplicated in `sp-dcspad` | `sp-dcspad` | low |
 | 9 | DCSPad's `:root` hasn't converged on the system | `sp-dcspad` | low / optional |
 | 10 | The multi-environment deploy pattern's only worked example lives outside the family repos | `docs/` | low |
+| 11 | Info chip is implemented in `sp-dcspad` but not in the design system | `design-system/` | medium |
 
 ---
 
@@ -144,6 +145,34 @@ to implement from, so this is a durability note, not a gap.
 
 **Done looks like:** nothing, unless that repo becomes unreachable — in which
 case inline a trimmed `Sync-Live.ps1` excerpt into the doc.
+
+## 11 · Info chip is implemented in `sp-dcspad` but not in the design system
+
+The system ships `.dcs-badge` (file type, coloured) and `.dcs-chip` (status,
+signal-coloured, `cursor: pointer`) and nothing between them, so a quiet
+classification label — what a thing *is*, as opposed to how it is *doing* — has
+no component to compose from. Rule 6 ("compose from existing classes; do not
+invent component classes") cannot be followed for a component that does not
+exist, so anything chip-shaped that is not status ends up wearing a status
+costume, against the readme's own "signal colors are status, never decoration".
+
+`sp-dcspad` hit this in the SP Workbench Pages view and now defines one locally
+as `.wb-info-chip`, with its two instances composing that single class so they
+cannot drift while this is pending. The gap analysis, the proposed
+`.dcs-chip-info` CSS, the rules to ship with it, and a file-by-file landing
+table are in `sp-dcspad/design/INFO-CHIP.md`; the same proposal is filed here as
+[issue #3](https://github.com/whywhyjoe/dcs-workbench-tools/issues/3).
+
+One decision is genuinely open: the component's **10px radius** is not on the
+documented three-radii scale (3 / 4 / 6 / 999). It was inherited from an
+existing chip that predates that rule. Either 10px joins the scale as "info
+chip", or the component is restated at `--radius-l` (6px) and reads squarer.
+Everything else about it is already conformant.
+
+**Done looks like:** `.dcs-chip-info` in `dcs-workbench.css` and the standalone
+build, listed in `readme.md`'s feedback components with the status-vs-info
+distinction recorded under §Colour, the radius question settled, and
+`sp-dcspad`'s `.wb-info-chip` reduced to an alias of it.
 
 ---
 
