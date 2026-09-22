@@ -15,13 +15,16 @@ application server, or mandatory build step.
 > decisions awaiting a human. Read it before assuming something is missing by
 > accident, and add to it rather than starting a second list.
 
-The current repository has two cooperating projects plus a utilities folder:
+The current repository has two cooperating projects:
 
 | Folder | Role |
 | --- | --- |
 | [`halo-banner/`](halo-banner/README.md) | A visual editor that generates scoped Halo banner HTML/CSS or a standalone SVG for SharePoint pages. |
 | [`dcs-file-picker/`](dcs-file-picker/README.md) | The reusable **DCS File Broker**: a provider-based open/save dialog for local files and same-tenant SharePoint document libraries. |
-| [`utilities/`](utilities/README.md) | Console-first admin scripts. `dcspad-sp-utilities.js` exposes `window.SPUtils` (PnPjs 2) for list inspection, schema export, batch delete, column creation, Excel export, and group membership from CSV; loadable as a DCSPad framework entry. |
+
+The console-first SP admin script (`dcspad-sp-utilities.js`, `window.SPUtils`)
+briefly lived here and now ships with DCSPad as `sp-dcspad/utilities/`, where
+it is a framework-catalog preset with Monaco intelligence.
 
 plus the two shared, non-application artifacts:
 
